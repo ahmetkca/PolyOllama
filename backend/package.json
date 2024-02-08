@@ -1,0 +1,16 @@
+{
+  "name": "multiple-ollama-in-docker-parallel",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@stricjs/app": "^1.0.0-rc.34",
+    "@stricjs/utils": "^2.0.7",
+    "ollama": "^0.4.4"
+  }
+}
