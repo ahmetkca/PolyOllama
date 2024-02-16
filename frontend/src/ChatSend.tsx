@@ -3,13 +3,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogPortal, D
 import { Textarea } from "./components/ui/textarea";
 import { useWebSocket, websocketReadyStateToString } from "./WebSocketContext";
 import { Button } from "./components/ui/button";
-import { Paperclip, X } from "lucide-react";
-import { asyncConvertFileToUint8Array, } from "./lib/utils";
+import { AlertTriangle, Paperclip, X } from "lucide-react";
+import { asyncConvertFileToUint8Array, cn, } from "./lib/utils";
 import { useOllamaClientsStore } from "./stores/use-ollama-clients-store";
 
 
 import { nanoid } from "nanoid";
 import { SelectModel } from "./SelectModelDropdown";
+import { toast } from "sonner";
+import { Badge } from "./components/ui/badge";
 
 const DisplayImages = (
     {
@@ -79,7 +81,7 @@ const AddImage = (
             <input
                 ref={fileInputRef}
                 type="file"
-                multiple={true}
+                multiple={false}
                 accept="image/*"
                 className="hidden"
                 onChange={handleFileInputChange}
@@ -102,12 +104,26 @@ const AddImage = (
 
 
 export const ChatSend = ({
+    disabled = false,
     onSend,
+    chat,
 }: {
-    onSend?: (msg: string, model: string, images: {
+    disabled?: boolean;
+    onSend?: (msg: string, images: {
         converted: Uint8Array,
         file: File
-    }[] | undefined) => void
+    }[] | undefined) => Promise<void>;
+    chat: {
+        conversations: {
+            endpoint: string | null;
+            conversation_id: number;
+            model: string;
+            chat_id: number;
+            endpoint_id: number | null;
+        }[];
+        chat_id: number;
+        title: string;
+    } | undefined;
 }) => {
 
     const [images, setImages] = useState<{
@@ -117,31 +133,34 @@ export const ChatSend = ({
 
     const {
         endpoints,
-        setSelectedModelForAllEndpoints,
+        endpointsSelectedModel,
     } = useOllamaClientsStore((state) => state);
 
-    const { isConnected, socket } = useWebSocket();
+    const numOfEndpointsWithoutModel = endpoints.filter((endpoint) => (endpointsSelectedModel.get(endpoint) === "" || endpointsSelectedModel.get(endpoint) === undefined)).length;
+
+    // const { isConnected, socket } = useWebSocket();
 
     const textArea = useRef<HTMLTextAreaElement>(null);
 
     const [dialogOpen, setDialogOpen] = useState(false);
 
-    const [model, setModel] = useState<string | undefined>(undefined);
+    // const [model, setModel] = useState<string | undefined>(undefined);
 
-    const handleMessageSend = (model: string | undefined) => {
-        console.log(`model in handleMessageSend: ${model}`);
-        if (model === undefined) {
-            console.error("Model is required");
-            return; // model is required
-        }
+    const handleMessageSend = () => {
         if (!textArea.current) {
             console.log("textArea.current is null");
+            toast.error("Prompt cannot be empty.");
             return; // no empty messages allowed
+        }
+        if (numOfEndpointsWithoutModel > 0) {
+            console.log("All conversations must have a model selected before sending a message.");
+            toast.error("All conversations must have a model selected before sending a message.");
+            return;
         }
 
         console.log(`SENDING ${images.length} images`);
         if (images.length === 0) {
-            onSend?.(textArea.current.value, model, undefined);
+            onSend?.(textArea.current.value, undefined);
             textArea.current!.value = "";
         } else if (images.length > 0) {
             Promise.all(
@@ -154,9 +173,11 @@ export const ChatSend = ({
 
                 })
             ).then((imagesConverted) => {
-                onSend?.(textArea.current!.value, model, imagesConverted);
-                setImages([]);
-                textArea.current!.value = "";
+                (async () => {
+                    await onSend?.(textArea.current!.value, imagesConverted);
+                    setImages([]);
+                    textArea.current!.value = "";
+                })();
             });
         }
 
@@ -173,22 +194,31 @@ export const ChatSend = ({
         if (event.key === "k" && event.metaKey) {
             setDialogOpen((open) => !open);
         } else if (event.key === "Enter" && event.metaKey) {
-            handleMessageSend(model);
+
+            handleMessageSend();
             setDialogOpen(false);
         }
     };
 
     useEffect(() => {
         // Cmd + k to open/close dialog
+
+        if (disabled) {
+            console.log(`Chat send dialog is disabled. Skipping event listener setup.`);
+            return;
+        }
+
         if (endpoints.length === 0) {
             console.log(`No endpoints found. Skipping event listener setup. Opening chat send dialog is disabled.`)
             return;
         }
 
+
+
         document.addEventListener("keydown", handleKeyDown);
 
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [handleKeyDown, endpoints]);
+    }, [handleKeyDown, endpoints, disabled]);
 
 
     return (
@@ -199,19 +229,69 @@ export const ChatSend = ({
                 <DialogContent className="max-w-3xl top-[25%]">
                     <DialogHeader>
                         <DialogTitle>
-                            Ollama Client Cluster is {isConnected ? "Connected" : "Disconnected"}
+                            <span className="text-lg font-bold text-[rgb(64,64,64)] dark:text-white">
+                                Send a message
+                            </span>
                         </DialogTitle>
                         <DialogDescription>
-                            {socket.current ?
+                            {/* {socket.current ?
                                 // following function return OPEN, CLOSED, CLOSING, CONNECTING
-                                // I want you to make it lowercase except the first letter
                                 websocketReadyStateToString(socket.current.readyState).charAt(0).toUpperCase() + websocketReadyStateToString(socket.current.readyState).slice(1).toLowerCase()
                                 :
                                 "Connecting..."
-                            }
+                            } */}
+                            <div className="flex flex-wrap gap-2">
+                                {chat === undefined && endpoints.map((ep) => {
+                                    const mdl = endpointsSelectedModel.get(ep);
+                                    console.log(`mdl`, typeof mdl)
+                                    if (mdl === undefined || mdl === "") {
+                                        return null;
+                                    }
+                                    return (
+                                        <div key={ep} className="flex flex-row justify-center items-center gap-1">
+                                            <Badge variant={'outline'}>
+                                                <span className="text-sm font-bold text-[rgb(64,64,64)] dark:text-white">
+                                                    {mdl}
+                                                </span>
+                                            </Badge>
+                                        </div>
+                                    )
+                                })
+
+                                }
+                                {chat !== undefined && chat.conversations.map((conv, index) => {
+                                    console.log("conv.endpoint", conv.endpoint);
+                                    console.log(endpointsSelectedModel)
+                                    if (conv.endpoint_id === null || conv.endpoint === null) {
+                                        return null;
+                                    }
+                                    const model = endpointsSelectedModel.get(conv.endpoint);
+                                    console.log("model", model);
+                                    return (
+                                        <div key={index} className="flex flex-row justify-center items-center gap-1">
+                                            <Badge variant={'outline'}>
+                                                <span className="text-sm font-bold text-[rgb(64,64,64)] dark:text-white">
+                                                    {model}
+                                                </span>
+                                            </Badge>
+                                        </div>
+                                    )
+                                })}
+                                {/* check how many conversations's endpoint has no model selected. */}
+                                {numOfEndpointsWithoutModel > 0 && (
+                                    <div className="flex flex-row justify-center items-center gap-1">
+                                        <Badge variant={'outline'} className="border-red-400 flex flex-row justify-center items-center gap-1">
+                                            <AlertTriangle className="h-4 w-4 text-red-400" />
+                                            <span className="text-sm font-bold text-red-400">
+                                                {numOfEndpointsWithoutModel} conversation{numOfEndpointsWithoutModel > 1 ? "s" : ""} without model
+                                            </span>
+                                        </Badge>
+                                    </div>
+                                )}
+                            </div>
                         </DialogDescription>
                         {/* there is gonna be textarea and when i enter I should do something */}
-                        <div className="flex flex-col py-4 px-2 gap-y-2.5">
+                        <div className="flex flex-col pb-4 pt-1 px-0 gap-y-2.5">
                             <DisplayImages images={images}
                                 onRemoveImage={(imageId) => {
                                     setImages(images.filter((image) => image.id !== imageId));
@@ -226,14 +306,14 @@ export const ChatSend = ({
 
                             <div className="flex flex-row justify-start items-center">
                                 <div className="flex flex-row justify-start space-x-1">
-                                    <SelectModel
+                                    {/* <SelectModel
                                         modelName={model}
                                         onModelChange={(model) => {
                                             console.log("model", model);
                                             setModel(model);
                                             // setSelectedModelForAllEndpoints(model);
                                         }}
-                                    />
+                                    /> */}
                                     <AddImage onSelectedImagesChange={(images) => {
                                         setImages((prevImages) => {
                                             return [
@@ -244,16 +324,21 @@ export const ChatSend = ({
                                     }} />
                                 </div>
                                 <div className="flex flex-1 flex-grow"></div>
-                                <div className="flex flex-row justify-end">
+                                <div
+                                    className={
+                                        cn("flex flex-row justify-end",
+                                            disabled ? "opacity-50 pointer-events-none" : "opacity-100 pointer-events-auto"
+                                        )}
+                                >
                                     Press{" "}
                                     <div className="flex flex-row justify-center items-center mx-1">
 
                                         <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-2 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                                            <span className="text-sm">⌘</span>
+                                            <span className="text-base">⌘</span>
                                         </kbd>
                                         <span className="text-xs mx-0.5">+</span>
                                         <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                                            <span className="text-lg mb-[1px]">↩</span>
+                                            <span className="text-xl mb-[1px]">↩</span>
                                         </kbd>
                                     </div>
                                     {" "}

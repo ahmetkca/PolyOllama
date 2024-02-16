@@ -6,7 +6,9 @@ import { useChatEntriesStore } from './stores/use-chat-entries';
 enum MessageType {
     RegisterEndpoints = 'register-endpoints',
     ChatMessage = 'on-chat-message',
+    ChatTitleCreated = 'on-chat-title-created',
 }
+
 
 // Union type for the Message
 type Message = {
@@ -21,6 +23,8 @@ type WebSocketContextType = {
     sendMessage: (message: any) => void;
     registerHandler: (endpoint: string, handler: (message: Message) => void) => void;
     unregisterHandler: (endpoint: string) => void;
+    registerChatTitleCreatedHandler: (handlerId: `${string}-${number}`, handler: (message: Message) => void) => void;
+    unregisterChatTitleCreatedHandler: (handlerId: `${string}-${number}`) => void;
 };
 
 export const websocketReadyStateToString = (readyState: number) => {
@@ -56,11 +60,12 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
 
     // const [messageHandlers, setMessageHandlers] = useState<Map<string, (message: Message) => void>>(new Map());
     const newMessageHandlers = useRef<Map<string, (message: Message) => void>>(new Map());
+    const chatTitleCreatedHandlers = useRef<Map<`${string}-${number}`, (message: Message) => void>>(new Map());
 
     // const [socket, setSocket] = useState<WebSocket | null>(null);
     const socket = useRef<WebSocket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
-    const { setEndpoints, clearEndpoints } = useOllamaClientsStore((state) => state);
+    const { setEndpoints, clearEndpoints, addAvailableEndpoints } = useOllamaClientsStore((state) => state);
     const { createChatEntriesByEndpoint } = useChatEntriesStore((state) => state);
 
     useEffect(() => {
@@ -105,6 +110,31 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
             const message: Message = JSON.parse(event.data);
             // console.log('WebSocket message received:', message);
 
+            if (message.type === MessageType.ChatTitleCreated) {
+                console.log('abc Chat title created:', message);
+                // handlerId for chatTitleCreatedHandlers is the `a unique string`-`chatId number`
+                // ex. "sidebar_chatTitleCreatedHandler-1", "chat_windows_chatTitleCreatedHandler-2"
+                // we need to call the handler for each handlerId that matches the chatId
+                const dataCasted = message.data as { chatId: number, title: string };
+                if (dataCasted.chatId === null || dataCasted.chatId === undefined || isNaN(dataCasted.chatId)) {
+                    console.warn('abc ChatId is null. Chat title not handled.');
+                    return;
+                }
+                if (dataCasted.title === null || dataCasted.title === undefined || dataCasted.title === '') {
+                    console.warn('abc Chat title is null or empty. Chat title not handled.');
+                    return;
+                }
+                for (const [handlerId, handler] of chatTitleCreatedHandlers.current.entries()) {
+                    const [_, chatIdStr] = handlerId.split('-');
+                    const chatId = parseInt(chatIdStr);
+                    if (dataCasted.chatId === chatId) {
+                        console.log(`abc Calling chatTitleCreatedHandler for chatId: ${chatId}`);
+                        handler(message);
+                    }
+                }
+            }
+
+
             if (message.type === MessageType.RegisterEndpoints) {
                 const { endpoints } = message.data;
                 console.log('Registering endpoints:', endpoints)
@@ -144,7 +174,7 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
     }, [host, port]);
 
     const sendMessage = (message: any) => {
-        console.log(`Sending message, socket: ${socket.current?.name}`)
+        console.log(`Sending message, socket: ${socket.current}`);
         console.log(`Sending message, WebSocket readyState: ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
 
 
@@ -175,11 +205,21 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
     const unregisterHandler = useCallback((endpoint: string) => {
         console.log(`Unregistering handler for endpoint: ${endpoint}`);
         newMessageHandlers.current.delete(endpoint);
-    }
-        , []);
+    }, []);
+
+
+    const registerChatTitleCreatedHandler = useCallback((handlerId: `${string}-${number}`, handler: (message: Message) => void) => {
+        console.log('abc Registering chatTitleCreatedHandler:', handlerId, handler)
+        chatTitleCreatedHandlers.current.set(handlerId, handler);
+    }, []);
+
+    const unregisterChatTitleCreatedHandler = useCallback((handlerId: `${string}-${number}`) => {
+        console.log('abc Unregistering chatTitleCreatedHandler:', handlerId);
+        chatTitleCreatedHandlers.current.delete(handlerId);
+    }, []);
 
     return (
-        <WebSocketContext.Provider value={{ socket: socket, isConnected, sendMessage, registerHandler, unregisterHandler }}>
+        <WebSocketContext.Provider value={{ socket: socket, isConnected, sendMessage, registerHandler, unregisterHandler, registerChatTitleCreatedHandler, unregisterChatTitleCreatedHandler }}>
             {/* {socket?.current?.readyState === WebSocket.OPEN ? <p>Connected to WebSocket</p> : <p>Disconnected from WebSocket</p>}
             {children} */}
             {children}

@@ -73,6 +73,7 @@ const DynamicChatLayout = ({
                                     >
                                         <ChatWindow
                                             endpoint={tempEndpoints.shift() as string}
+                                            onIncomingMessageProgress={(_1, _2, _3) => {}}
                                         // sentMessage={sentMessage}
                                         />
                                     </ResizablePanel>

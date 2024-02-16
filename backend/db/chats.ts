@@ -49,6 +49,17 @@ export const updateChatTitle = (chatId: number, title: string): boolean => {
 }
 
 
+export const getChatByChatId = (chatId: number) => {
+    const selectChatStmt = db.prepare<{
+        chat_id: number
+        title: string
+    }, { $chat_id: number }>("SELECT * FROM chats WHERE chat_id = $chat_id;");
+    const row = selectChatStmt.get({ $chat_id: chatId });
+    selectChatStmt.finalize();
+    return row;
+}
+
+
 export const getAllChats = () => {
     const selectChats = db.prepare<{
         chat_id: number
@@ -58,4 +69,20 @@ export const getAllChats = () => {
     const rows = selectChats.all(null);
     selectChats.finalize();
     return rows;
+}
+
+export const deleteChat = (chatId: number): boolean => {
+    try {
+        const deleteChat = db.prepare<unknown, { $chat_id: number }>(
+            "DELETE FROM chats WHERE chat_id = $chat_id;"
+        );
+        deleteChat.run({ $chat_id: chatId });
+        deleteChat.finalize();
+        return true;
+    } catch (e: unknown) {
+        if (e instanceof SQLiteError) {
+            console.error(e);
+        }
+        return false;
+    }
 }

@@ -5,6 +5,7 @@ import { Ollama } from "ollama";
 import {
     $,
     spawn,
+    type Subprocess,
 } from "bun";
 
 type TopKTopPValues = {
@@ -40,13 +41,20 @@ export type OllamaClient = {
 };
 
 let ollamaClientPids: Map<string, number> = new Map();
+// let ollamaServer
+
+
 
 async function killAllOllamaServers() {
+    const statuses = [];
     for (const endpoint of endpoints) {
         console.log(`Killing ollama server at ${endpoint}`);
-        await killOllamaServer(endpoint);
+        const status = await killOllamaServer(endpoint);
+        statuses.push({ endpoint, success: status });
     }
+    return statuses;
 }
+
 
 function getOllamaClientPids() {
     return ollamaClientPids;
@@ -77,6 +85,7 @@ const killOllamaServer = async (endpoint: string) => {
     if (pid) {
         console.log("Killing ollama server", pid);
         const ret = await $`kill -9 ${pid}`;
+        console.log(ret.stdout.toString());
         if (ret.exitCode !== 0) {
             // throw new Error("Failed to kill ollama server");
             console.log(`Failed to kill ollama server at ${endpoint} with pid ${pid}`);
@@ -159,4 +168,4 @@ const addOllamaServer = async () => {
 
 
 
-export { getEndpoints, getEndpointsMap, getOllamaClients, generateTopKTopP, addOllamaServer, killOllamaServer, killAllOllamaServers };
+// export { getEndpoints, getEndpointsMap, getOllamaClients, generateTopKTopP, addOllamaServer, killOllamaServer, killAllOllamaServers };

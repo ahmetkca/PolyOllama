@@ -80,3 +80,63 @@ export const removeDbEndpoint = (endpoint: string): boolean => {
         return false;
     }
 }
+
+export const removeAllDbEndpoints = (): boolean => {
+    try {
+        const deleteEndpoints = db.prepare(
+            "DELETE FROM endpoints;"
+        );
+        deleteEndpoints.run();
+        deleteEndpoints.finalize();
+        return true;
+    } catch (e: unknown) {
+        if (e instanceof SQLiteError) {
+            console.error(e);
+        }
+        return false;
+    }
+}
+
+export const getEndpointsByChatId = (chatId: number) => {
+    const selectEndpointsStmt = db.prepare<{
+        endpoint_id: number
+        endpoint: string
+    }, { $chat_id: number }>(`
+    SELECT 
+        * 
+    FROM 
+        endpoints 
+    WHERE 
+        endpoint_id 
+            IN (
+                SELECT 
+                    endpoint_id 
+                FROM 
+                    conversations 
+                WHERE chat_id = $chat_id
+            );
+    `);
+    const rows = selectEndpointsStmt.all({ $chat_id: chatId });
+    selectEndpointsStmt.finalize();
+    return rows;
+}
+
+export const getAllNonAssignedEndpointsByChatId = (chatId: number) => {
+    const stmt = db.prepare<{
+        endpoint_id: number;
+        endpoint: string;
+    }, { $chat_id: number }>(`
+    SELECT 
+        e.endpoint_id, 
+        e.endpoint 
+    FROM 
+        endpoints e
+    LEFT JOIN 
+        conversations c ON e.endpoint_id = c.endpoint_id AND c.chat_id = $chat_id
+    WHERE 
+        c.endpoint_id IS NULL;
+    `);
+    const rows = stmt.all({ $chat_id: chatId });
+    stmt.finalize();
+    return rows;
+}

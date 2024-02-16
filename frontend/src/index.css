@@ -2,10 +2,213 @@
 @tailwind components;
 @tailwind utilities;
 
+.ready-chat-icon {
+  /* animation: glow 1s infinite alternate; */
+  /* filter: drop-shadow(0 0 5px rgba(113,163,255,0.8)) drop-shadow(0 0 10px rgba(113,163,255,0.8)); */
+
+
+  /* filter: drop-shadow(0 0 5px rgba(113, 163, 255, 0.8)); */
+  /* animation: pulsate 1.5s infinite ease-in-out; */
+
+  filter: drop-shadow(0 0 2px rgba(113, 163, 255, 0.7));
+  animation: lineGlow 2s infinite alternate ease-in-out; 
+  /* 1s infinite alternate; */
+}
+
+@keyframes lineGlow {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px rgba(113, 163, 255, 0.5));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 4px rgba(113, 163, 255, 0.9));
+  }
+}
+
+/* @keyframes pulsate {
+  0% {
+    filter: drop-shadow(0 0 5px rgba(113, 163, 255, 0.5)) drop-shadow(0 0 10px rgba(113, 163, 255, 0.5));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 10px rgba(113, 163, 255, 0.8)) drop-shadow(0 0 20px rgba(113, 163, 255, 0.8));
+  }
+
+  100% {
+    filter: drop-shadow(0 0 5px rgba(113, 163, 255, 0.5)) drop-shadow(0 0 10px rgba(113, 163, 255, 0.5));
+  }
+} */
+
+/* @keyframes glow {
+  from {
+    box-shadow: 0 0 5px rgba(113, 163, 255, 0.5), 0 0 10px rgba(113, 163, 255, 0.5), 0 0 15px rgba(113, 163, 255, 0.7), 0 0 20px rgba(113, 163, 255, 0.7), 0 0 25px rgba(113, 163, 255, 0.9), 0 0 30px rgba(113, 163, 255, 0.9);
+  }
+
+  to {
+    box-shadow: 0 0 10px rgba(113, 163, 255, 0.7), 0 0 15px rgba(113, 163, 255, 0.7), 0 0 20px rgba(113, 163, 255, 0.9), 0 0 25px rgba(113, 163, 255, 0.9), 0 0 30px rgba(113, 163, 255, 1), 0 0 35px rgba(113, 163, 255, 1);
+  }
+} */
+
+.boujee-text {
+  --bg-size: 400%;
+  /* --color-one: hsl(15 90% 55%);
+  --color-two: hsl(40 95% 55%); */
+  --color-one: hsl(210, 80%, 60%);
+  /* Cool blue */
+  --color-two: hsl(280, 80%, 60%);
+  /* font-size: clamp(2rem, 10vw, 5rem); */
+  background: linear-gradient(90deg,
+      var(--color-one),
+      var(--color-two),
+      var(--color-one)) 0 0 / var(--bg-size) 100%;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: move-bg 10s infinite linear;
+  /* , dynamic-glow 5s infinite alternate linear; */
+}
+
+/* @keyframes dynamic-gloww {
+
+  0%,
+  100% {
+    text-shadow: 0 0 1px var(--color-one), 0 0 1px var(--color-one);
+   
+  }
+
+  50% {
+    text-shadow: 0 0 1px var(--color-two), 0 0 1px var(--color-two);
+   
+  }
+} */
+
+@media (prefers-reduced-motion: no-preference) {
+  .boujee-text {
+    animation: move-bg 8s linear infinite, dynamic-glow 3s infinite alternate;
+  }
+
+  @keyframes move-bg {
+    to {
+      background-position: var(--bg-size) 0;
+    }
+  }
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-text {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  background: linear-gradient(270deg, rgb(133, 222, 244), rgb(164, 245, 254), rgb(133, 222, 244));
+  /* linear-gradient(270deg, rgb(133, 222, 244), rgb(255, 255, 255), rgb(133, 222, 244)); */
+  /* linear-gradient(to right, rgb(84, 144, 240), rgb(0, 232, 210)); */
+  /* background-size: 200% 200%; */
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientAnimation 6s ease infinite;
+  /* text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1); */
+  /* text-shadow: 0px 0px 8px rgba(225, 245, 254, 0.7); */
+  font-size: 1.65em;
+  backdrop-filter: blur(0px);
+
+  /* Ensure text remains sharp */
+}
 
 
 
 
+.reflection-gradient-text {
+  background: linear-gradient(to right, rgb(0, 216, 214), rgb(0, 1, 127));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+}
+
+.reflection-gradient-text::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleY(-1);
+  opacity: 0.2;
+  background: linear-gradient(to right, rgb(0, 216, 214), rgb(0, 1, 127));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+
+
+.gradient-text {
+  /* Required to apply gradient to text */
+  background: linear-gradient(to right, rgb(246, 112, 98), rgb(254, 81, 150));
+
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+  /* linear-gradient(to right, rgb(30, 200, 180), rgb(150, 230, 161)); */
+  /* linear-gradient(to right, rgb(34, 193, 195), rgb(253, 187, 45)); */
+  /* linear-gradient(to right, rgb(230, 233, 239), rgb(144, 147, 153)); */
+  /* linear-gradient(to right, rgb(72, 85, 99), rgb(41, 50, 60)); */
+  /* linear-gradient(to right, rgb(145, 234, 228), rgb(240, 240, 240), rgb(145, 234, 228)); */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+
+  /* Optional: Add more styles to fit the theme of your web application */
+  font-size: 1.75em;
+  font-weight: bold;
+  text-align: center;
+}
+
+
+
+/* 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 350ms forwards;
+}
+
+.fade-out {
+  animation: fadeOut 550ms forwards;
+} */
 
 
 

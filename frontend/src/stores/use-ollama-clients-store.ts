@@ -3,6 +3,9 @@ import { create } from 'zustand';
 
 
 type OllamaClientsStore = {
+    availableEndpoints: string[];
+    addAvailableEndpoints: (endpoints: string[]) => void;
+
     endpoints: string[];
     endpointsSelectedModel: Map<string, string>;
 
@@ -15,13 +18,26 @@ type OllamaClientsStore = {
 
     setEndpoints: (endpoints: string[]) => void;
     addEndpoint: (endpoint: string) => void;
+    addEndpoints: (endpoints: string[]) => void;
     removeEndpoint: (endpoint: string) => void;
     clearEndpoints: () => void;
 }
 
+
 export const useOllamaClientsStore = create<OllamaClientsStore>((set, get) => ({
+    availableEndpoints: [],
+    addAvailableEndpoints: (endpoints) => {
+        set((state) => {
+            return {
+                ...state,
+                availableEndpoints: [...state.availableEndpoints, ...endpoints]
+            }
+        });
+    },
+
     endpoints: [],
     setEndpoints: (endpoints) => {
+        console.log('avc setEndpoints');
         set({
             endpoints,
             endpointsToChat: new Map(endpoints.map((endpoint) => [endpoint, true])),
@@ -35,6 +51,19 @@ export const useOllamaClientsStore = create<OllamaClientsStore>((set, get) => ({
             endpointsToChat: new Map([...state.endpointsToChat, [endpoint, true]])
         }));
     },
+    addEndpoints: (endpoints) => {
+        set((state) => {
+            const newEndpoints = endpoints.filter((endpoint) => !state.endpoints.includes(endpoint)); // filter out duplicates
+            const newEndpointsSelectedModel = new Map(newEndpoints.map((endpoint) => [endpoint, '']));
+            const newEndpointsToChat = new Map(newEndpoints.map((endpoint) => [endpoint, true]));
+            return {
+                endpoints: [...state.endpoints, ...newEndpoints],
+                endpointsSelectedModel: new Map([...state.endpointsSelectedModel, ...newEndpointsSelectedModel]),
+                endpointsToChat: new Map([...state.endpointsToChat, ...newEndpointsToChat])
+            }
+        })
+    },
+
     removeEndpoint: (endpoint) => {
         set((state) => ({
             endpoints: state.endpoints.filter((e) => e !== endpoint),
@@ -43,6 +72,7 @@ export const useOllamaClientsStore = create<OllamaClientsStore>((set, get) => ({
         }));
     },
     clearEndpoints: () => {
+        console.log('avc clearEndpoints')
         set({
             endpoints: [],
             endpointsToChat: new Map(),
@@ -52,9 +82,18 @@ export const useOllamaClientsStore = create<OllamaClientsStore>((set, get) => ({
 
     endpointsSelectedModel: new Map(),
     setSelectedModelByEndpoint: (endpoint, model) => {
-        const updatedMap = new Map(get().endpointsSelectedModel);
-        updatedMap.set(endpoint, model);
-        set({ endpointsSelectedModel: updatedMap });
+
+        set(
+            (state) => {
+                console.log('avc setSelectedModelByEndpoint 1', endpoint, model);
+                console.log('avc setSelectedModelByEndpoint 2', state.endpointsSelectedModel);
+                const updatedMap = new Map(state.endpointsSelectedModel);
+
+                return {
+                    endpointsSelectedModel: updatedMap.set(endpoint, model)
+                }
+            });
+        console.log(`avc setSelectedModelByEndpoint 3 ${endpoint}, ${model}`, get().endpointsSelectedModel);
     },
     setSelectedModelForAllEndpoints: (model) => {
         const updatedMap = new Map(get().endpointsSelectedModel);

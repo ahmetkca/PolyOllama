@@ -11,10 +11,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./comp
 
 export const SelectModel = memo((
     {
+        disabled = false,
         endpoint,
         modelName,
         onModelChange
     }: {
+        disabled?: boolean;
         endpoint?: string;
         modelName?: string;
         onModelChange: (model: string) => void;
@@ -29,6 +31,7 @@ export const SelectModel = memo((
         <Popover open={open} onOpenChange={setOpen} modal={true}>
             <PopoverTrigger asChild>
                 <Button
+                    disabled={disabled}
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}

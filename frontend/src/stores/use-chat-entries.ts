@@ -28,12 +28,25 @@ export type MessageWhenNotDone = {
     model: string;
 }
 
+export type MessageMetrics = {
+    total_duration: number;
+    load_duration: number;
+    prompt_eval_count: number;
+    prompt_eval_duration: number;
+    prompt_eval_rate: number;
+    eval_count: number;
+    eval_duration: number;
+    eval_rate: number;
+}
+
 export type OllamaStreamMessage = {
     type: string;
     endpoint: string;
     data: {
         message: MessageWhenDone | MessageWhenNotDone;
         messageChunkId: string;
+        createdAt: string;
+        messageMetrics: MessageMetrics | null;
     }
 }
 
@@ -41,16 +54,27 @@ export type ChatEntry = {
     id: string;
     message: {
         content: string;
-        role: "assistant" | "user";
+        role: "assistant" | "user" | "system";
         images?: File[];
+        total_duration?: number;
+        load_duration?: number;
+        prompt_eval_count?: number;
+        prompt_eval_duration?: number;
+        prompt_eval_rate?: number;
+        eval_count?: number;
+        eval_duration?: number;
+        eval_rate?: number;
     },
     model: string;
-
     endpoint: string;
+    chatId: number;
+    conversationId: number;
 }
 
 
 type ChatEntriesStore = {
+    //
+
     chatEntriesIndexByEndpoint: Map<string, number>;
     getChatEntriesIndexByEndpoint: (endpoint: string) => number;// | undefined;
     createChatEntriesByEndpoint: (endpoint: string) => void;
@@ -58,9 +82,11 @@ type ChatEntriesStore = {
     allChatEntries: ChatEntry[][];
     setChatEntries: (endpoint: string, chatEntries: ChatEntry[]) => void;
     addChatEntry: (endpoint: string, chatEntry: ChatEntry) => void;
+    addChatEntries: (endpoint: string, chatEntries: ChatEntry[]) => void;
     removeChatEntry: (endpoint: string, chatEntry: ChatEntry) => void;
     clearChatEntries: (endpoint: string) => void;
     addContentToChatEntryById: (endpoint: string, id: string, content: string) => void;
+    updateChatEntryMessageMetricsByMsgId: (endpoint: string, id: string, messageMetrics: MessageMetrics) => void;
     doesChatEntryExist: (endpoint: string, id: string) => boolean;
 }
 
@@ -90,16 +116,20 @@ export const useChatEntriesStore = create<ChatEntriesStore>((set, get) => ({
         });
     },
     removeChatEntriesByEndpoint: (endpoint) => {
-        const index = get().getChatEntriesIndexByEndpoint(endpoint);
-        if (index) {
-            set((state) => {
-                const updatedAllChatEntries = [...state.allChatEntries];
-                updatedAllChatEntries[index] = [];
-                const updatedChatEntriesIndexByEndpoint = new Map(state.chatEntriesIndexByEndpoint);
-                updatedChatEntriesIndexByEndpoint.delete(endpoint);
-                return { allChatEntries: updatedAllChatEntries, chatEntriesIndexByEndpoint: updatedChatEntriesIndexByEndpoint };
-            });
-        }
+
+
+        set((state) => {
+            const index = get().getChatEntriesIndexByEndpoint(endpoint);
+            console.log(`removeChatEntriesByEndpoint`, index, endpoint);
+
+            const updatedAllChatEntries = [...state.allChatEntries];
+            console.log("removeChatEntriesByEndpoint", updatedAllChatEntries, index)
+            updatedAllChatEntries[index] = [];
+            const updatedChatEntriesIndexByEndpoint = new Map(state.chatEntriesIndexByEndpoint);
+            updatedChatEntriesIndexByEndpoint.delete(endpoint);
+            return { allChatEntries: updatedAllChatEntries, chatEntriesIndexByEndpoint: updatedChatEntriesIndexByEndpoint };
+        });
+
     },
 
     allChatEntries: [],
@@ -173,5 +203,38 @@ export const useChatEntriesStore = create<ChatEntriesStore>((set, get) => ({
         }
         // }
         return false;
+    },
+
+    // chatEntries expected to be in order
+    addChatEntries: (endpoint, chatEntries) => {
+        const index = get().getChatEntriesIndexByEndpoint(endpoint);
+        console.log("addChatEntries", index, endpoint, chatEntries);
+
+        set((state) => {
+            const newAllChatEntries = [...state.allChatEntries];
+            newAllChatEntries[index] = newAllChatEntries[index].concat(chatEntries);
+            return { allChatEntries: newAllChatEntries };
+        })
+
+    },
+
+
+    updateChatEntryMessageMetricsByMsgId: (endpoint, id, messageMetrics) => {
+
+        set((state) => {
+            const chatEntriesIndex = get().getChatEntriesIndexByEndpoint(endpoint);
+            const newAllChatEntries = [...state.allChatEntries];
+            const chatEntry = newAllChatEntries[chatEntriesIndex].find((chatEntry) => chatEntry.id === id);
+            if (!chatEntry) {
+                return state;
+            }
+            if (chatEntry) {
+                chatEntry.message = {
+                    ...chatEntry.message,
+                    ...messageMetrics
+                };
+            }
+            return { allChatEntries: newAllChatEntries };
+        });
     },
 }));

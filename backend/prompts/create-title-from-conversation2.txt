@@ -1,0 +1,5 @@
+Craft a title for a conversation that succinctly summarizes its main topics and outcomes, ensuring clarity and brevity. 
+Begin by identifying the core themes, questions, and resolutions within the dialogue. 
+Aim for a title length of 10-12 words to balance readability with informativeness, starting with the most impactful information to capture the essence of the conversation. 
+Consider the tone and context subtly, ensuring the title reflects the nature of the exchange. 
+Adjust for accuracy and conciseness, ensuring the title serves as a comprehensive yet brief overview suitable for a web application display.

@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocket } from "./WebSocketContext";
 // import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { v4 as uuidv4 } from "uuid";
@@ -29,35 +29,162 @@ import { Slider } from "@/components/ui/slider"
 import { Input } from "./components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Textarea } from "./components/ui/textarea";
+import { useConversation, useConversationMessages } from "./hooks/use-conversations";
 
-const ChatWindowSettings = memo(({
+
+// controlled component
+const ModelSettingInput = ({
+  label,
+  minValue,
+  maxValue,
+  step,
+  defaultValue,
+  onChange,
+}: {
+  label: string;
+  minValue: number;
+  maxValue: number;
+  step: number;
+  defaultValue: number;
+  onChange: (value: number) => void;
+}) => {
+
+  // if slider changes, then input should also change
+  // if inut changes, then slider should also change
+
+  const [value, setValue] = useState(defaultValue);
+
+  const handleSliderChange = (value: number) => {
+    setValue(value);
+    onChange(value);
+  }
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(event);
+    const value = parseFloat(event.target.value);
+    setValue(value);
+    onChange(value);
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-3 items-center gap-4">
+        <Label htmlFor="width">
+          {label}
+        </Label>
+        <div></div>
+        <div>
+          <Input
+            id="temperature"
+            type="number"
+            min={minValue}
+            max={maxValue}
+            step={step}
+            value={value}
+            // defaultValue={defaultValue}
+            // on hover, show a muted border box
+            // if focused, show a border box with a color
+            className="border border-opacity-0 hover:border-opacity-100 hover:border-[#949494]  focus:ring-[#0f0f0f] focus:ring-2"
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 items-center gap-4">
+        <div className="col-span-3">
+          <Slider
+            value={[value]}
+            // defaultValue={[defaultValue]}
+            min={minValue}
+            max={maxValue}
+            step={step}
+            onValueChange={(sliderVal) => handleSliderChange(sliderVal[0])}
+          />
+        </div>
+      </div>
+    </>
+  )
+}
+
+
+const ChatWindowSettings = ({
   endpoint,
+  conversation,
 }: {
   endpoint: string;
+  conversation?: {
+    conversation_id: number;
+    model: string;
+    chat_id: number;
+    endpoint_id: number;
+    endpoint: string;
+  };
 }) => {
+  // if conversation is undefined, it means that the endpoint is not yet associated with a conversation, therefore, model selection should be enabled.
+  const isModelSelectionEnabled = useRef<boolean>(
+    conversation === undefined ? true : false
+  );
+
+  console.log(`ChatWindowSettings for endpoint: ${endpoint}`);
+  console.log("conversation", conversation);
+  console.log("isModelSelectionEnabled", isModelSelectionEnabled.current);
+
+
   const [open, setOpen] = useState(false);
+  const [modelSettings, setModelSettings] = useState<{
+    temperature: number | null;
+    top_k: number | null;
+    top_p: number | null;
+    num_ctx: number | null;
+  }>({
+    temperature: null,
+    top_k: null,
+    top_p: null,
+    num_ctx: null,
+  });
 
   const {
     endpointsSelectedModel,
     setSelectedModelByEndpoint,
   } = useOllamaClientsStore((state) => state);
 
+
   const handleModelChange = (model: string) => {
     setSelectedModelByEndpoint(endpoint, model);
   };
 
+  useEffect(() => {
+
+    if (conversation) {
+      console.log("Setting selected model by endpoint", endpoint, conversation.model);
+      isModelSelectionEnabled.current = false;
+      setSelectedModelByEndpoint(endpoint, conversation.model);
+
+    } else {
+      console.log(`The conversation is not yet defined for endpoint: ${endpoint}`);
+      console.log("Currently the models for the endpoints are: ", endpointsSelectedModel);
+    }
+
+    console.log(`CONVERSATION CHANGED, endpoint: ${endpoint}, conversation: `, conversation, 'isModelSelectionEnabled', isModelSelectionEnabled.current, 'endpointsSelectedModel', endpointsSelectedModel);
+  }, [conversation]);
+
   return (
+    // <div className="flex flex-row text-xs font-light space-x-0.5">
+    //   <span className="p-0.5 border">{endpoint}</span>
+    //   <span className="p-0.5 border">{conversation ? conversation.model : "No way"}</span>
+    //   <span className="p-0.5 border">{isModelSelectionEnabled.current ? "true" : "false"}</span>
+    //   <span className="p-0.5 border">{endpointsSelectedModel.get(endpoint)}</span>
+    // </div>
     <Popover open={open} onOpenChange={setOpen} defaultOpen={false}
 
     >
       <PopoverTrigger>
         <div className="flex flex-row justify-end items-center space-x-1.5">
-          {endpointsSelectedModel.get(endpoint) && (
+          {/* {endpointsSelectedModel.get(endpoint) && (
             <div className="flex flex-row justify-end items-center">
               <span className="font-light text-xs text-[#151515]">
                 {endpointsSelectedModel.get(endpoint)}</span>
             </div>
-          )}
+          )} */}
 
           <TooltipProvider>
             <Tooltip>
@@ -71,6 +198,7 @@ const ChatWindowSettings = memo(({
                   }}
                 >
                   {/* <Settings size={16} /> */}
+
                   <Settings2 size={16} />
                 </Button>
               </TooltipTrigger>
@@ -98,7 +226,7 @@ const ChatWindowSettings = memo(({
             </TabsTrigger>
           </TabsList>
           <TabsContent value="settings">
-            <div className="flex flex-col gap-2 p-2">
+            <div className="flex flex-col gap-2 p-2 pr-1">
               <div className="grid gap-4">
                 <div className="space-y-2">
                   <h4 className="font-medium leading-none">
@@ -109,11 +237,12 @@ const ChatWindowSettings = memo(({
                   </p>
                 </div>
                 <div className="grid gap-2">
-                  <div className="grid grid-cols-3 items-center gap-4">
+                  <div className="grid grid-cols-3 items-center gap-0.5 mb-1">
                     <Label htmlFor="width">
                       Model
                     </Label>
                     <SelectModel
+                      disabled={!isModelSelectionEnabled.current}
                       endpoint={endpoint}
                       modelName={endpointsSelectedModel.get(endpoint)}
                       onModelChange={handleModelChange}
@@ -122,30 +251,51 @@ const ChatWindowSettings = memo(({
                   </div>
                   {/* <div className="grid grid-cols-3 items-center gap-4"> */}
                   <div className="grid grid-row-2 items-center gap-4">
-                    <div className="grid grid-cols-3 items-center gap-4">
-                      <Label htmlFor="width">
-                        Temperature
-                      </Label>
-                      <div></div>
-                      <div>
-                        <Input
-                          id="temperature"
-                          type="number"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          defaultValue="0.5"
-                          // on hover, show a muted border box
-                          // if focused, show a border box with a color
-                          className="border-0 hover:border hover:border-[#949494] focus:border-[#0f0f0f] focus:ring-[#0f0f0f] focus:ring-2"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 items-center gap-4">
-                      <div className="col-span-3">
-                        <Slider defaultValue={[0.5]} min={0} max={1} step={0.01} />
-                      </div>
-                    </div>
+                    <ModelSettingInput
+                      label="Temperature"
+                      minValue={0}
+                      maxValue={1}
+                      step={0.01}
+                      defaultValue={0.5}
+                      onChange={(value) => {
+                        console.log("Temperature changed to: ", value);
+                        setModelSettings((prev) => ({ ...prev, temperature: value }));
+                      }}
+
+                    />
+                    <ModelSettingInput
+                      label="Top-k"
+                      minValue={0}
+                      maxValue={100}
+                      step={1}
+                      defaultValue={50}
+                      onChange={(value) => {
+                        console.log("Top-k changed to: ", value);
+                        setModelSettings((prev) => ({ ...prev, top_k: value }));
+                      }}
+                    />
+                    <ModelSettingInput
+                      label="Top-p"
+                      minValue={0}
+                      maxValue={1}
+                      step={0.01}
+                      defaultValue={0.9}
+                      onChange={(value) => {
+                        console.log("Top-p changed to: ", value);
+                        setModelSettings((prev) => ({ ...prev, top_p: value }));
+                      }}
+                    />
+                    <ModelSettingInput
+                      label="Num ctx"
+                      minValue={0}
+                      maxValue={4096}
+                      step={1}
+                      defaultValue={2048}
+                      onChange={(value) => {
+                        console.log("Num ctx changed to: ", value);
+                        setModelSettings((prev) => ({ ...prev, num_ctx: value }));
+                      }}
+                    />
                   </div>
                   {/* </div> */}
                 </div>
@@ -171,7 +321,7 @@ const ChatWindowSettings = memo(({
       </PopoverContent>
     </Popover>
   )
-});
+}
 
 
 
@@ -249,12 +399,13 @@ const KillChatWindowButton = ({
     }
   };
 
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown]);
+  // Currently, doesn't make sense to add this.
+  // useEffect(() => {
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => {
+  //     document.removeEventListener("keydown", handleKeyDown);
+  //   };
+  // }, [handleKeyDown]);
 
   return (
     <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen} defaultOpen={false}>
@@ -275,7 +426,7 @@ const KillChatWindowButton = ({
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-xs">
-                Kill Ollama Client
+                Kill Ollama Server
               </div>
             </TooltipContent>
           </Tooltip>
@@ -288,11 +439,11 @@ const KillChatWindowButton = ({
             Are you absolutely sure?
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the Ollama Client running on port
+            This action cannot be undone. This will permanently delete the Ollama Server running on port
             <span className="font-semibold text-[#0f0f0f] ml-1 mr-1">
               {(new URL(endpoint)).port}
             </span>.
-            Every chat history related to this Ollama Client will be lost.
+            The conversation that is associated with this Ollama Server will also be deleted.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -324,58 +475,6 @@ const KillChatWindowButton = ({
   );
 }
 
-
-
-const OldChatEntry = ({ id, message, model, endpoint }: ChatEntry) => {
-  // console.log(`ChatEntry; ${id}`)
-  return (
-    <div className="w-full h-full text-[#0f0f0f]">
-      <div className="px-4 py-2 justify-center text-base md:gap-6 m-auto">
-        <div className="flex flex-1 text-base mx-auto gap-3 md:px-5 lg:px-1 xl:px-5 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem] group">
-          {/* there are going to be multipe of the following div. But only the last one should be sticky to the top once it is scroolable */}
-          <div className="flex-shrink-0 flex flex-col relative items-end">
-            {message.role === "assistant" && (
-              <img
-                className=" w-8 rounded-full object-cover"
-                src="https://ollama.ai/public/ollama.png"
-                alt="Ollama"
-              />
-            )}
-            {message.role === "user" && (
-              <div className="h-8 w-8 rounded-full bg-[#AfBfCf] group-hover:bg-[#0f0f0f] transition-colors duration-300 ease-in-out"></div>
-            )}
-          </div>
-          <div className="relative flex w-full flex-col lg:w-[calc(100%-5px)]">
-            <div className="font-semibold select-none">{model}</div>
-            <div className="relative flex w-full flex-col lg:w-[calc(100%-5px)] agent-turn">
-              <div className="flex flex-col flex-1 flex-grow gap-1 md:gap-3">
-                <div className="flex flex-grow flex-col max-w-full">
-                  <div className="min-h-[20px] text-message flex flex-col items-start gap-3 whitespace-pre-wwrap breakk-words [.text-message+&]:mt-5 overflow-x-auto">
-                    {message.images && message.images.length > 0 &&
-                      message.images.map((image, i) => (
-                        <ImageWithPreview
-                          key={`${image.name}-${i}-${image.lastModified}-${image.size}`}
-                          image={image} />
-
-                      ))}
-                    <div className="markdown prose w-full breakk-words dark:prose-invert light">
-                      <p className="text-xs font-light">{endpoint}</p>
-                      <p className="text-xs font-light">{id}</p>
-                      <p className="text-[#0f0f0f] w-full whitespace-pre-wrap break-words paragraph">
-                        {message.content}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 type InfoDisplayProps = {
   total_duration: number;
   load_duration: number;
@@ -387,117 +486,49 @@ type InfoDisplayProps = {
   eval_rate: number;
 }
 
-const InfoDisplay =
-  React.forwardRef<HTMLDivElement, InfoDisplayProps>(
-    ({
-      total_duration,
-      load_duration,
-      prompt_eval_count,
-      prompt_eval_duration,
-      prompt_eval_rate,
-      eval_count,
-      eval_duration,
-      eval_rate
-    }, ref) => {
-      return (
-        <div
-          ref={ref}
-          className={cn(
-            // "z-20 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-3 text-base  bg-opacity-95  text-black rounded-md shadow-lg backdrop-blur-md",
-            // "bg-[#eeeeee] border-[#949494] border-2 border-opacity-10"
-
-            // "z-20 absolute top-0 left-1/2 transform -translate-x-1/2 p-3 text-base bg-opacity-95 text-black rounded-md shadow-lg backdrop-blur-md",
-            // "bg-[#eeeeee] border-[#949494] border-2 border-opacity-10"
-
-            "z-10 absolute text-base bg-opacity-95 p-2 text-black rounded-md shadow-lg backdrop-blur-md bg-[#eeeeee] border-[#949494] border-2 border-opacity-10"
-          )}>
-
-          {/* <div className="text-lg">
-            <span className="font-light">{endpoint}</span>
-          </div> */}
-          <div>
-            <span className="font-semibold ">Total Duration:</span>{" "}
-            {total_duration.toFixed(3)}s
-          </div>
-          <div>
-            <span className="font-semibold ">Load Duration:</span>{" "}
-            {load_duration.toFixed(3)}s
-          </div>
-          <div>
-            <span className="font-semibold ">Prompt Eval Count:</span>{" "}
-            {prompt_eval_count}
-          </div>
-          <div>
-            <span className="font-semibold ">Prompt Eval Duration:</span>{" "}
-            {prompt_eval_duration.toFixed(3)}s
-          </div>
-          <div>
-            <span className="font-semibold ">Prompt Eval Rate:</span>{" "}
-            {prompt_eval_rate.toFixed(3)} tokens/s
-          </div>
-          <div>
-            <span className="font-semibold ">Eval Count:</span>{" "}
-            {eval_count}
-          </div>
-          <div>
-            <span className="font-semibold ">Eval Duration:</span>{" "}
-            {eval_duration.toFixed(3)}s
-          </div>
-          <div>
-            <span className="font-semibold ">Eval Rate:</span>{" "}
-            {eval_rate.toFixed(3)} tokens/s
-          </div>
-        </div>
-      )
-    }
-  )
-
 
 
 export const ChatWindow = ({
+  chatId,
+  conversationId,
   endpoint,
   tailwindcssHeightClassName,
+  onIncomingMessageProgress,
 }: {
+  chatId?: number;
+  conversationId?: number;
   endpoint: string;
   tailwindcssHeightClassName?: string;
+  onIncomingMessageProgress: (
+    endpoint: string,
+    action: "register" | "unregister" | "change" | "registerIfNotExists",
+    status: "idle" | "progress"
+  ) => void;
 }) => {
+  const {
+    data: conversation,
+  } = useConversation({ chatId: chatId, conversationId: conversationId, endpoint: endpoint });
+  console.log("CONVERSATION: ", conversation);
 
 
-  const [showSpeed, setShowSpeed] = useState<{
-    chatEntryId?: string;
-    show: boolean;
-    total_duration: number;
-    load_duration: number;
-    prompt_eval_count: number;
-    prompt_eval_duration: number;
-    prompt_eval_rate: number;
-    eval_count: number;
-    eval_duration: number;
-    eval_rate: number;
-  }>({
-    chatEntryId: undefined,
-    show: false,
-    total_duration: 0,
-    load_duration: 0,
-    prompt_eval_count: 0,
-    prompt_eval_duration: 0,
-    prompt_eval_rate: 0,
-    eval_count: 0,
-    eval_duration: 0,
-    eval_rate: 0,
-  });
+  // CULPRIT COME HERE
+  // MAYBE NEEDED
+  useEffect(() => {
+    onIncomingMessageProgress(endpoint, "registerIfNotExists", "idle");
+    return () => {
+      onIncomingMessageProgress(endpoint, "unregister", "idle");
+    };
+  }, []);
 
   const {
-    endpoints,
-    setEndpoints,
+    // endpoints,
+    // setEndpoints,
+    removeEndpoint,
+    endpointsSelectedModel,
   } = useOllamaClientsStore((state) => state);
 
   const chatContainerRef = React.useRef<HTMLDivElement>(null);
-  const infoContainerRef = React.useRef<HTMLDivElement>(null);
 
-  const [showInfo, setShowInfo] = useState(false);
-
-  // const [chatEntries, setChatEntries] = useState<ChatEntry[]>([]);
   const {
     allChatEntries,
     addChatEntry,
@@ -505,100 +536,108 @@ export const ChatWindow = ({
     doesChatEntryExist,
     getChatEntriesIndexByEndpoint,
     removeChatEntriesByEndpoint,
-  } = useChatEntriesStore((state) => state);
+    addChatEntries,
+    updateChatEntryMessageMetricsByMsgId
+  } = useChatEntriesStore((state) => ({
+    allChatEntries: state.allChatEntries,
+    addChatEntry: state.addChatEntry,
+    addContentToChatEntryById: state.addContentToChatEntryById,
+    doesChatEntryExist: state.doesChatEntryExist,
+    getChatEntriesIndexByEndpoint: state.getChatEntriesIndexByEndpoint,
+    removeChatEntriesByEndpoint: state.removeChatEntriesByEndpoint,
+    addChatEntries: state.addChatEntries,
+    updateChatEntryMessageMetricsByMsgId: state.updateChatEntryMessageMetricsByMsgId,
 
-  // const [showWaitingForOllamaClient, setShowWaitingForOllamaClient] = useState<boolean>(false);
+  }));
 
   // check if the last chat entry in the chat entries for this endpoint is from user
   const lastChatEntry = allChatEntries.at(getChatEntriesIndexByEndpoint(endpoint))?.slice(-1)[0];
   const lastChatEntryRole = lastChatEntry?.message.role;
-
+  const getChatEntriesByEndpoint = useCallback(() => {
+    return allChatEntries.at(getChatEntriesIndexByEndpoint(endpoint));
+  }, [allChatEntries, endpoint]);
 
   useEffect(() => {
-    const parent = chatContainerRef.current;
-    const child = infoContainerRef.current;
-    if (showSpeed.show && showInfo && parent && child) {
-
-      const parentRect = parent.getBoundingClientRect();
-      const childRect = child.getBoundingClientRect();
-
-      // Calculate the centered position based on the scroll offset
-      const top = (parent.scrollTop + (parentRect.height - childRect.height) / 2) + 'px';
-      const left = (parent.scrollLeft + (parentRect.width - childRect.width) / 2) + 'px';
-
-      // Apply the centered position to the child
-      child.style.top = top;
-      child.style.left = left;
+    if (chatContainerRef.current) {
+      const { scrollHeight, clientHeight } = chatContainerRef.current;
+      chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
     }
-  }, [showSpeed.show, showInfo]);
+  }, [getChatEntriesByEndpoint]);
 
+  ///////////////////
+  const {
+    data: messages,
+  } = useConversationMessages(conversationId);
 
   useEffect(() => {
-    const parentx = chatContainerRef.current;
-    const childx = infoContainerRef.current;
 
-    console.log(`parent: ${parentx}`);
-    console.log(`child: ${childx}`);
-
-    const updateChildPosition = () => {
-      const parent = chatContainerRef.current;
-      const child = infoContainerRef.current;
-      if (!parent || !child) {
-        console.log('Parent or child not found');
-        return;
+    console.log(`Adding chat entries for endpoint: ${endpoint}`);
+    if (messages) {
+      removeChatEntriesByEndpoint(endpoint);
+      addChatEntries(endpoint, messages.messages.map(
+        (message) => ({
+          id: message.message_id,
+          chatId: message.chat_id,
+          conversationId: message.conversation_id,
+          endpoint: message.endpoint,
+          message: {
+            content: message.content,
+            role: message.role,
+            images: message.image ? [new File([new Blob([message.image], { type: 'application/octet-stream' })], message.message_id, { type: 'application/octet-stream' })] : [],
+            total_duration: message.total_duration === null ? undefined : message.total_duration,
+            load_duration: message.load_duration === null ? undefined : message.load_duration,
+            prompt_eval_count: message.prompt_eval_count === null ? undefined : message.prompt_eval_count,
+            prompt_eval_duration: message.prompt_eval_duration === null ? undefined : message.prompt_eval_duration,
+            prompt_eval_rate: message.prompt_eval_rate === null ? undefined : message.prompt_eval_rate,
+            eval_count: message.eval_count === null ? undefined : message.eval_count,
+            eval_duration: message.eval_duration === null ? undefined : message.eval_duration,
+            eval_rate: message.eval_rate === null ? undefined : message.eval_rate,
+          },
+          model: message.model,
+        })
+      ));
+      if (messages.messages.length === 1 && messages.messages[0].role === "user") {
+        onIncomingMessageProgress(endpoint, "change", "progress");
       }
-
-      const parentRect = parent.getBoundingClientRect();
-      const childRect = child.getBoundingClientRect();
-
-      // Calculate the centered position based on the scroll offset
-      const top = (parent.scrollTop + (parentRect.height - childRect.height) / 2) + 'px';
-      const left = (parent.scrollLeft + (parentRect.width - childRect.width) / 2) + 'px';
-
-      // Apply the centered position to the child
-      child.style.top = top;
-      child.style.left = left;
-    };
-
-    // Update the child position on scroll
-    parentx?.addEventListener('scroll', updateChildPosition);
-    updateChildPosition(); // Initial positioning
+    }
 
     return () => {
-      parentx?.removeEventListener('scroll', updateChildPosition);
-    };
-  }, [chatContainerRef, infoContainerRef, showInfo]);
+      console.log(`Removing chat entries for endpoint: ${endpoint}`);
+      removeChatEntriesByEndpoint(endpoint);
+    }
+  }, [messages, chatId, conversationId, endpoint]);
+  /////////////////////
 
   const { registerHandler, unregisterHandler } = useWebSocket();
 
-  const handleIncomingMessage = (message: OllamaStreamMessage) => {
+  const handleIncomingLastMessage = (message: OllamaStreamMessage) => {
     if (message.data.message.done) {
-      const lastMessage: MessageWhenDone = message.data
-        .message as MessageWhenDone;
+      onIncomingMessageProgress(endpoint, "change", "idle");
 
-      // lastMessage.total_duration is in nanoseconds
-      const totalDurationInSec = lastMessage.total_duration / 1e9;
-      const loadDurationInSec = lastMessage.load_duration / 1e9;
-      const promptEvalDurationInSec = lastMessage.prompt_eval_duration / 1e9;
-      const evalDurationInSec = lastMessage.eval_duration / 1e9;
-      setShowSpeed((prev) => ({
-        ...prev,
-        show: true,
-        total_duration: totalDurationInSec,
-        load_duration: loadDurationInSec,
-        prompt_eval_count: lastMessage.prompt_eval_count,
-        prompt_eval_duration: promptEvalDurationInSec,
-        prompt_eval_rate:
-          lastMessage.prompt_eval_count / promptEvalDurationInSec,
-        eval_count: lastMessage.eval_count,
-        eval_duration: evalDurationInSec,
-        eval_rate: lastMessage.eval_count / evalDurationInSec,
-        chatEntryId: message.data.messageChunkId,
-      }));
+      if (message.data.messageMetrics !== null) {
+        updateChatEntryMessageMetricsByMsgId(endpoint,
+          message.data.messageChunkId, {
+          total_duration: message.data.messageMetrics.total_duration,
+          load_duration: message.data.messageMetrics.load_duration,
+          prompt_eval_count: message.data.messageMetrics.prompt_eval_count,
+          prompt_eval_duration: message.data.messageMetrics.prompt_eval_duration,
+          prompt_eval_rate: message.data.messageMetrics.prompt_eval_rate,
+          eval_count: message.data.messageMetrics.eval_count,
+          eval_duration: message.data.messageMetrics.eval_duration,
+          eval_rate: message.data.messageMetrics.eval_rate,
+        })
+      }
+
     }
   };
 
   const handleMessage = (message: any) => {
+    if (!chatId || !conversationId) {
+      console.log(`ChatId: ${chatId} or ConversationId: ${conversationId} is not set`);
+      return;
+    }
+
+
     const incoming: OllamaStreamMessage = JSON.parse(JSON.stringify(message));
     console.log(incoming);
 
@@ -618,7 +657,7 @@ export const ChatWindow = ({
       }
 
       if (incoming.data.message.done) {
-        handleIncomingMessage(incoming);
+        handleIncomingLastMessage(incoming);
       }
 
       return;
@@ -631,6 +670,8 @@ export const ChatWindow = ({
       message: incoming.data.message.message,
       model: incoming.data.message.model,
       endpoint,
+      chatId,
+      conversationId,
     };
     // setChatEntries((prev) => [...prev, newChatEntry]);
     addChatEntry(endpoint, newChatEntry);
@@ -639,73 +680,51 @@ export const ChatWindow = ({
       chatContainerRef.current.scrollTop = scrollHeight - clientHeight;
     }
 
-    if (!showSpeed.show && incoming.data.message.done) {
-      handleIncomingMessage(incoming);
+    if (incoming.data.message.done) {
+      handleIncomingLastMessage(incoming);
     }
   };
 
   useEffect(() => {
+    console.log(`Registering handler for ChatId: ${chatId}, ConversationId: ${conversationId}, Endpoint: ${endpoint}`);
     registerHandler(endpoint, handleMessage);
     return () => {
       unregisterHandler(endpoint);
       // clearChatEntries(endpoint);
     };
-  }, [endpoint, registerHandler, unregisterHandler]);
+  }, [endpoint, registerHandler, unregisterHandler, chatId, conversationId]);
 
   return (
-    // cool modern slick minimalistic gradient glowing background and appropriate border purple
 
     <div
       ref={chatContainerRef}
       // full viewport height minus the header and footer
       // h-[calc(100vh-2rem)]
       className={cn(
-        "w-full h-full  relative overflow-auto  bg-gradient-to-r from-[#f0f0f0] to-[#fCfCfC] ",
-        "h-[calc(50vh-2.5rem)] rounded-xl border border-[#F1F1F1] border-opacity-30",
+        "w-full h-full  relative overflow-auto  bg-gradient-to-r from-[rgb(247,247,247)] to-[rgb(253,253,253)] ",
+        "h-[calc(50vh-2.5rem)] rounded-xl border border-[rgb(217,217,217)] border-opacity-30",
         tailwindcssHeightClassName
       )}
     >
-      <div className="sticky top-0 left-0 w-full bg-[#f0f0f0] items-center h-10 mb-1.5 z-20 pl-3 pr-0 pb-1.5">
+      <div className="sticky top-0 left-0 w-full bg-[rgb(247,247,247)] items-center h-10 mb-1.5 z-20 pl-3 pr-0 pb-1.5">
         <div className="flex flex-row justify-start items-center h-10 text-lg font-semibold text-[#0f0f0f] px-1 py-0.5">
           <div className="flex flex-1 flex-grow">
             <div className="flex flex-row justify-start items-center">
-              <span className="font-extralight text-sm p-0.5">
+              {/* <span className="font-extralight text-sm p-0.5">
                 Running on port <span className="font-semibold text-[#0f0f0f] px-0.5">
                   {new URL(endpoint).port}
                 </span>
-              </span>
+              </span> */}
+              {endpointsSelectedModel.get(endpoint) ? (<span>
+                <span className="font-semibold text-[#0f0f0f] px-0.5">
+                  {endpointsSelectedModel.get(endpoint)}
+                </span>
+              </span>) : <span className="font-medium">No model selected yet</span>}
             </div>
           </div>
           <div className="flex flex-row justify-end items-center gap-2">
 
-            <ChatWindowSettings endpoint={endpoint} />
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <div className="flex-none pt-1">
-                    {/* <Toggle
-
-                      aria-label="Show Speed"
-                      size={'sm'}
-                      variant={'outline'}
-                      onClick={() => setShowInfo((prev) => !prev)}
-                    >
-                      <Info size={16} />
-                    </Toggle> */}
-                    <Switch
-                      checked={showInfo}
-                      onCheckedChange={(checked) => setShowInfo(checked)}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-xs">
-                    {showInfo ? "Hide" : "Show"} Speed
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <ChatWindowSettings endpoint={endpoint} conversation={conversation?.conversation} />
 
             {/* kill button to kill the ollama server and close the chat window and remove the endpoint from the list */}
 
@@ -713,7 +732,7 @@ export const ChatWindow = ({
               endpoint={endpoint}
               onKill={(endpoint) => {
                 console.log(`Killing Ollama Client: ${endpoint}`);
-                setEndpoints(endpoints.filter((e) => e !== endpoint));
+                removeEndpoint(endpoint);
                 removeChatEntriesByEndpoint(endpoint);
               }}
             />
@@ -722,8 +741,10 @@ export const ChatWindow = ({
         </div>
       </div>
       <div className="flex flex-col pb-9 text-sm">
-        {allChatEntries.at(getChatEntriesIndexByEndpoint(endpoint)) ?
-          allChatEntries.at(getChatEntriesIndexByEndpoint(endpoint))?.map(
+        {/* {allChatEntries.at(getChatEntriesIndexByEndpoint(endpoint)) ?
+          allChatEntries.at(getChatEntriesIndexByEndpoint(endpoint))?.map( */}
+        {getChatEntriesByEndpoint() ?
+          getChatEntriesByEndpoint()?.map(
             (entry) => (
               // <ChatEntry
               //   key={entry.id}
@@ -743,7 +764,7 @@ export const ChatWindow = ({
           <ChatEntrySkeleton />)}
       </div>
 
-      {showInfo &&
+      {/* {showInfo &&
         showSpeed.show && (
           <InfoDisplay
             ref={infoContainerRef}
@@ -756,7 +777,7 @@ export const ChatWindow = ({
             eval_duration={showSpeed.eval_duration}
             eval_rate={showSpeed.eval_rate}
           />
-        )}
+        )} */}
     </div>
   );
 };
