@@ -8,7 +8,7 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { useWebSocket } from "./WebSocketContext";
 
 import { Button, ButtonProps } from "./components/ui/button";
-import { AlertCircle, Bot, Loader2, MessageSquare, PanelLeftOpen, PanelRightOpen, Plus, Zap } from "lucide-react";
+import { AlertCircle, Bot, Loader2, MessageSquare, PanelLeftOpen, PanelRightOpen, Plus, Square, StopCircle, Zap } from "lucide-react";
 
 import { useChatEntriesStore } from "./stores/use-chat-entries";
 
@@ -22,6 +22,7 @@ import { AspectRatio } from "./components/ui/aspect-ratio";
 import { toast } from "sonner";
 import { ChatTitle } from "./ChatTitle";
 import WaveLoader from "./WaveLoader";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
 
 
 const AddOllamaClientBUtton = ({
@@ -123,11 +124,46 @@ const ChatOllamaServerWarning = ({
   numOfConversationsWithoutEndpoint: number;
   waitingModelsToRespond?: boolean;
 }) => {
+
+  const { sendMessage } = useWebSocket();
+
   if (waitingModelsToRespond) {
     return (
       <div className="flex flex-row justify-center items-end gap-1 mr-1">
-        <div>
+        <div className="pb-1">
           <Bot size={32} className="animate-grow-shrink" />
+        </div>
+        <div className="flex">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size={'icon'}
+                  variant={'ghost'}
+                  onClick={() => {
+                    console.log("Stop chat button clicked");
+                    sendMessage({
+                      type: "stop-chat",
+                    });
+                  }}
+                  className="ml-0.5 p-[7px]"
+                >
+                  {/* circle and filled square at the center svg */}
+                  <div className="rounded-full border-2 border-gray-950 p-1 dark:border-gray-200 relative h-full w-full">
+                    {/* center the square */}
+                    <Square className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 h-[13px] w-[13px] "
+                      fill="rgb(32,32,32)" absoluteStrokeWidth={true}
+                    />
+                  </div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-sm text-center font-light text-[rgb(26,26,26)]">
+                  Stop all models from responding.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         {/* <div className="pb-0.5">
           <WaveLoader animationSpeed={100} dotCount={5} />
@@ -598,7 +634,7 @@ export const ChatWindows = ({
                     <p className="flex-none text-2xl font-semibold text-[#0f0f0f]">
                       {chatId && currentChat && (
                         // chat title can be long. It should have a max width and be ellipsized
-                        <div className="max-w-[24rem] truncate">
+                        <div className="max-w-[17rem] sm:max-w-[22rem] md:max-w-[26rem] lg:max-w-[31rem] xl:max-w-[34rem] 2xl:max-w-[37rem] truncate">
                           <ChatTitle
                             chatId={chatId}
                             chatTitle={currentChat.chat.title}

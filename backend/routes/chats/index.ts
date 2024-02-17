@@ -176,4 +176,6 @@ chats.put('/:chatId/assign-endpoints-to-conversations', async (ctx) => {
     return ctx.json({ conversationsWithAssignedEndpoints: assignedEndpointsWithConversations });
 });
 
+
+
 export default chats;

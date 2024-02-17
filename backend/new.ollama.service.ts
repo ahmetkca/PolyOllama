@@ -23,6 +23,8 @@ type OllamaServer = {
     subprocess: Subprocess;
     client: Ollama;
     endpoint: string;
+
+
 };
 
 type OllamaManager = {
@@ -31,10 +33,36 @@ type OllamaManager = {
     list: () => OllamaServer[];
     get: (id: string) => OllamaServer | undefined;
     removeAll: () => Promise<{ endpoint: string; success: boolean }[]>;
+
+    abortCurrentlyRunningChat: () => void;
+    addRunningOllamaServer: (chatId: number, endpoint: string) => AbortSignal;
+    removeRunningOllamaServer: (chatId: number, endpoint: string) => void;
+    clearRunningOllamaServers: () => void;
 };
 
 function createOllamaServerManager(): OllamaManager {
     const ollamaServers: Map<string, OllamaServer> = new Map();
+
+    const currentlyRespondingOllamaServers: Map<`${string}-${number}`, { abortController: AbortController }> = new Map();
+    const abortCurrentlyRunningChat = () => {
+        console.log("Aborting currently running chat", currentlyRespondingOllamaServers);
+        for (const [key, { abortController }] of currentlyRespondingOllamaServers) {
+            // abort with reason "stopped currently running chat"
+            console.log(`Aborting chat with key ${key}`);
+            abortController.abort();
+        }
+    };
+    const addRunningOllamaServer = (chatId: number, endpoint: string) => {
+        const abortController = new AbortController();
+        currentlyRespondingOllamaServers.set(`${endpoint}-${chatId}`, { abortController });
+        return abortController.signal;
+    }
+    const removeRunningOllamaServer = (chatId: number, endpoint: string) => {
+        currentlyRespondingOllamaServers.delete(`${endpoint}-${chatId}`);
+    }
+    const clearRunningOllamaServers = () => {
+        currentlyRespondingOllamaServers.clear();
+    }
 
 
     const add = async () => {
@@ -122,6 +150,10 @@ function createOllamaServerManager(): OllamaManager {
         list,
         get,
         removeAll,
+        abortCurrentlyRunningChat,
+        addRunningOllamaServer,
+        removeRunningOllamaServer,
+        clearRunningOllamaServers,
     };
 }
 

@@ -177,6 +177,8 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
         console.log(`Sending message, socket: ${socket.current}`);
         console.log(`Sending message, WebSocket readyState: ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
 
+        console.log(`Sending message:`);
+        console.log(message);
 
         if (socket?.current && socket?.current?.readyState === WebSocket.OPEN) {
 
@@ -191,6 +193,8 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
             console.log(message);
             const stringifiedMessage = JSON.stringify(message, replacer);
             console.log(`Sending message: ${stringifiedMessage}`);
+
+            console.log(`afg ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
             socket.current.send(stringifiedMessage);
         } else {
             console.warn('WebSocket is not connected. Message not sent.');

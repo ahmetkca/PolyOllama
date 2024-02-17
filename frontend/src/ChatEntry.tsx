@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import { useChatEntriesStore } from "./stores/use-chat-entries";
 import { ImageWithPreview } from "./ImageWithPreview";
 import { Skeleton } from "./components/ui/skeleton";
-import { Info, RotateCcw } from "lucide-react";
+import { CircleUser, Info, RotateCcw } from "lucide-react";
 import { cn } from "./lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip";
@@ -116,7 +116,8 @@ const ChatEntry: FC<ChatEntryProps> = ({ id, endpoint }) => {
                             />
                         )}
                         {message.role === "user" && (
-                            <div className="h-8 w-8 rounded-full bg-[#AfBfCf] group-hover:bg-[#0f0f0f] transition-colors duration-300 ease-in-out"></div>
+                            // <div className="h-8 w-8 rounded-full bg-[#AfBfCf] group-hover:bg-[#0f0f0f] transition-colors duration-300 ease-in-out"></div>
+                            <CircleUser className="w-[33px] h-[33px] rounded-full object-cover" color="rgb(27,27,27)" />
                         )}
                     </div>
                     <div className="relative flex w-full flex-col lg:w-[calc(100%-5px)]">
@@ -132,11 +133,11 @@ const ChatEntry: FC<ChatEntryProps> = ({ id, endpoint }) => {
                                                     image={image} />
 
                                             ))}
-                                        <div className="markdown prose w-full breakk-words dark:prose-invert light">
+                                        <div className="markdown prose w-full breakk-words dark:prose-invert light pt-0.5">
                                             {/* DEBUG */}
 
-                                            <p className="text-xs font-light">{endpoint}</p>
-                                            <p className="text-xs font-light">{id}</p>
+                                            {/* <p className="text-xs font-light">{endpoint}</p>
+                                            <p className="text-xs font-light">{id}</p> */}
 
 
                                             <p className="text-[#0f0f0f] w-full whitespace-pre-wrap break-words paragraph">

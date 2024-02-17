@@ -75,7 +75,11 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
 
             const payload = JSON.parse(message as string, reviver);
 
-            // console.log(payload);
+            if (payload.type === "stop-chat") {
+                ollamaServerManager.abortCurrentlyRunningChat();
+                return;
+            }
+
 
             if (payload.type === "chat-message") {
                 // data: {
@@ -145,8 +149,11 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
 
                 async function sendResponse(
                     ollamaServer: { endpoint: string; client: Ollama; }, model: string,
-                    endpoint: string, chatId: number, isFirstChatMessage: boolean
+                    endpoint: string, chatId: number, isFirstChatMessage: boolean,
+                    signal?: AbortSignal
                 ) {
+
+
                     // find conversation_id that is associated with chatId and endpoint.
                     const conversation = getConversationByChatIdAndEndpoint(chatId, endpoint);
                     if (!conversation) {
@@ -191,7 +198,16 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                     const messageChunkId = crypto.randomUUID();
                     let calculatedMsgMetrics: ReturnType<typeof calculateMessageMetrics> | null = null;
                     console.log(`Endpoint ${ollamaServer.endpoint} (model: ${model}) responded with message chunk id: ${messageChunkId}`);
+                    let abortChatResponse = false;
                     for await (const message of response) {
+                        if (signal && signal.aborted) {
+                            console.log("Aborting response sending...");
+                            abortChatResponse = true;
+                            message.done = true;
+                        }
+
+                        // potentially check if the signal is aborted.
+
                         if (message.done) {
                             calculatedMsgMetrics = calculateMessageMetrics({
                                 total_duration: message.total_duration,
@@ -221,6 +237,9 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                             }),
                             true,
                         );
+                        if (abortChatResponse) {
+                            break;
+                        }
                     }
                     fullMessage.content = messageParts.join("");
 
@@ -279,7 +298,8 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                         const ollamaClient = ollamaServerManager.get(endpointToUse);
                         if (ollamaClient) {
                             console.log(`Sending response to client for endpoint ${endpoint}, model: ${modelToUse}, chatId: ${chatId}, isFirstChatMessage: ${isFirstChatMessage}`);
-                            return sendResponse(ollamaClient, modelToUse, endpoint, chatId, isFirstChatMessage);
+                            const abortSignal = ollamaServerManager.addRunningOllamaServer(chatId, endpoint);
+                            return sendResponse(ollamaClient, modelToUse, endpoint, chatId, isFirstChatMessage, abortSignal);
                         }
                     } else {
                         console.log(`Endpoint ${endpoint} is enabled for chat but no Ollama client is found for it`);
@@ -361,7 +381,10 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                                 }
                             }
                         }
-                    });
+                    })
+                    .finally(() => {
+                        ollamaServerManager.clearRunningOllamaServers();
+                    })
 
 
             }

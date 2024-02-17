@@ -612,6 +612,7 @@ export const ChatWindow = ({
 
   const handleIncomingLastMessage = (message: OllamaStreamMessage) => {
     if (message.data.message.done) {
+      console.log("Incoming message is done");
       onIncomingMessageProgress(endpoint, "change", "idle");
 
       if (message.data.messageMetrics !== null) {
