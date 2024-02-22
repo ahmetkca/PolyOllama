@@ -37,7 +37,7 @@ export const useOllamaClientsStore = create<OllamaClientsStore>((set, get) => ({
 
     endpoints: [],
     setEndpoints: (endpoints) => {
-        console.log('avc setEndpoints');
+        // console.log('avc setEndpoints');
         set({
             endpoints,
             endpointsToChat: new Map(endpoints.map((endpoint) => [endpoint, true])),
@@ -72,7 +72,7 @@ export const useOllamaClientsStore = create<OllamaClientsStore>((set, get) => ({
         }));
     },
     clearEndpoints: () => {
-        console.log('avc clearEndpoints')
+        // console.log('avc clearEndpoints')
         set({
             endpoints: [],
             endpointsToChat: new Map(),
@@ -85,15 +85,15 @@ export const useOllamaClientsStore = create<OllamaClientsStore>((set, get) => ({
 
         set(
             (state) => {
-                console.log('avc setSelectedModelByEndpoint 1', endpoint, model);
-                console.log('avc setSelectedModelByEndpoint 2', state.endpointsSelectedModel);
+                // console.log('avc setSelectedModelByEndpoint 1', endpoint, model);
+                // console.log('avc setSelectedModelByEndpoint 2', state.endpointsSelectedModel);
                 const updatedMap = new Map(state.endpointsSelectedModel);
 
                 return {
                     endpointsSelectedModel: updatedMap.set(endpoint, model)
                 }
             });
-        console.log(`avc setSelectedModelByEndpoint 3 ${endpoint}, ${model}`, get().endpointsSelectedModel);
+        // console.log(`avc setSelectedModelByEndpoint 3 ${endpoint}, ${model}`, get().endpointsSelectedModel);
     },
     setSelectedModelForAllEndpoints: (model) => {
         const updatedMap = new Map(get().endpointsSelectedModel);

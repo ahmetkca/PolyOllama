@@ -53,7 +53,7 @@ const AddOllamaClientBUtton = ({
   const addOllamaServer = () => {
     setAddingOllamaClient(true);
     addOllamaClient().then((newEndpoint) => {
-      console.log("newEndpoint", newEndpoint.endpoint);
+      // console.log("newEndpoint", newEndpoint.endpoint);
       // setEndpoints([...endpoints, newEndpoint.endpoint]);
       addEndpoints([newEndpoint.endpoint]);
       createChatEntriesByEndpoint(newEndpoint.endpoint);
@@ -67,11 +67,11 @@ const AddOllamaClientBUtton = ({
 
   const handleKeyDown = (event: KeyboardEvent) => {
 
-    console.log("event", event);
+    // console.log("event", event);
     // Command + Alt/Option + a
     if (event.code === "KeyA" && event.metaKey && event.altKey) {
       addOllamaServer();
-      console.log("Command + Alt/Option + a pressed")
+      // console.log("Command + Alt/Option + a pressed")
     }
   };
 
@@ -141,7 +141,7 @@ const ChatOllamaServerWarning = ({
                   size={'icon'}
                   variant={'ghost'}
                   onClick={() => {
-                    console.log("Stop chat button clicked");
+                    // console.log("Stop chat button clicked");
                     sendMessage({
                       type: "stop-chat",
                     });
@@ -376,9 +376,9 @@ export const ChatWindows = ({
     if (chatId === undefined || conversations === undefined) return;
 
     // here we can try to assign available endpoints to conversations that don't have an endpoint.
-    console.log(`There are ${numOfConversationsWithoutEndpoint} conversations without an endpoint.`);
-    console.log(`Currently there are ${endpoints.length} endpoints.`);
-    console.log(`Endpoints: ${endpoints}`);
+    // console.log(`There are ${numOfConversationsWithoutEndpoint} conversations without an endpoint.`);
+    // console.log(`Currently there are ${endpoints.length} endpoints.`);
+    // console.log(`Endpoints: ${endpoints}`);
     assignEndpointsToConversations({ chatId: chatId, endpoints: endpoints })
       .then((_) => {
         mutateConversations();
@@ -409,7 +409,7 @@ export const ChatWindows = ({
     });
 
     const imageFiles = images?.map((image) => {
-      console.log(`image.file: ${image.file.name}`);
+      // console.log(`image.file: ${image.file.name}`);
       return image.file
     });
 
@@ -434,7 +434,7 @@ export const ChatWindows = ({
       return image.converted;
     });
 
-    console.log(`Sending message: ${msg} with ${imagesToSend?.length} images`);
+    // console.log(`Sending message: ${msg} with ${imagesToSend?.length} images`);
 
 
     // in the backend the server will have to know which endpoints to send the message to and which model to use
@@ -463,14 +463,14 @@ export const ChatWindows = ({
 
 
   const getGridColsClassName = (length: number) => {
-    console.log(`oo- GRID: length of the ${length}`);
+    // console.log(`oo- GRID: length of the ${length}`);
     if (length === 1) return "grid-cols-1";
     if (length >= 2 && length <= 4) return "grid-cols-2";
     if (length >= 5) return "grid-cols-6";
   };
 
   const getColSpanClassName = (length: number, index: number) => {
-    console.log(`oo- COLSPAN: length of the ${length}, index: ${index}`);
+    // console.log(`oo- COLSPAN: length of the ${length}, index: ${index}`);
     if (length === 1) return "col-span-1";
 
     // if there are 2 endpoints, first two endpoints should span 1 column each
@@ -491,7 +491,7 @@ export const ChatWindows = ({
     const isLastRow = index >= length - modulo;
     if (!isLastRow) return "col-span-2";
 
-    console.log(`length: ${length}, index: ${index}, modulo: ${modulo}`)
+    // console.log(`length: ${length}, index: ${index}, modulo: ${modulo}`)
 
     // modulo is used to determine the number of chat windows in the last row
     // modulo can be 0 which means there are 3 chat windows in the last row
@@ -705,7 +705,7 @@ export const ChatWindows = ({
                     conversations.conversations
                       .filter((conv) => conv.endpoint !== null) // filter out conversations without endpoint
                       .map((conversation, ci) => {
-                        console.log(`rendering ChatWindow for endpoint: ${conversation.endpoint}`)
+                        // console.log(`rendering ChatWindow for endpoint: ${conversation.endpoint}`)
                         const chtid = chatId;
 
 

@@ -60,7 +60,7 @@ const ModelSettingInput = ({
   }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(event);
+    // console.log(event);
     const value = parseFloat(event.target.value);
     setValue(value);
     onChange(value);
@@ -124,9 +124,9 @@ const ChatWindowSettings = ({
     conversation === undefined ? true : false
   );
 
-  console.log(`ChatWindowSettings for endpoint: ${endpoint}`);
-  console.log("conversation", conversation);
-  console.log("isModelSelectionEnabled", isModelSelectionEnabled.current);
+  // console.log(`ChatWindowSettings for endpoint: ${endpoint}`);
+  // console.log("conversation", conversation);
+  // console.log("isModelSelectionEnabled", isModelSelectionEnabled.current);
 
 
   const [open, setOpen] = useState(false);
@@ -155,16 +155,16 @@ const ChatWindowSettings = ({
   useEffect(() => {
 
     if (conversation) {
-      console.log("Setting selected model by endpoint", endpoint, conversation.model);
+      // console.log("Setting selected model by endpoint", endpoint, conversation.model);
       isModelSelectionEnabled.current = false;
       setSelectedModelByEndpoint(endpoint, conversation.model);
 
     } else {
-      console.log(`The conversation is not yet defined for endpoint: ${endpoint}`);
-      console.log("Currently the models for the endpoints are: ", endpointsSelectedModel);
+      // console.log(`The conversation is not yet defined for endpoint: ${endpoint}`);
+      // console.log("Currently the models for the endpoints are: ", endpointsSelectedModel);
     }
 
-    console.log(`CONVERSATION CHANGED, endpoint: ${endpoint}, conversation: `, conversation, 'isModelSelectionEnabled', isModelSelectionEnabled.current, 'endpointsSelectedModel', endpointsSelectedModel);
+    // console.log(`CONVERSATION CHANGED, endpoint: ${endpoint}, conversation: `, conversation, 'isModelSelectionEnabled', isModelSelectionEnabled.current, 'endpointsSelectedModel', endpointsSelectedModel);
   }, [conversation]);
 
   return (
@@ -212,7 +212,7 @@ const ChatWindowSettings = ({
         </div>
       </PopoverTrigger>
       <PopoverContent
-        align="center"
+        // align="center"
         className="w-[360px] p-1 h-auto">
         <Tabs defaultValue="settings" className=""
 
@@ -258,7 +258,7 @@ const ChatWindowSettings = ({
                       step={0.01}
                       defaultValue={0.5}
                       onChange={(value) => {
-                        console.log("Temperature changed to: ", value);
+                        // console.log("Temperature changed to: ", value);
                         setModelSettings((prev) => ({ ...prev, temperature: value }));
                       }}
 
@@ -270,7 +270,7 @@ const ChatWindowSettings = ({
                       step={1}
                       defaultValue={50}
                       onChange={(value) => {
-                        console.log("Top-k changed to: ", value);
+                        // console.log("Top-k changed to: ", value);
                         setModelSettings((prev) => ({ ...prev, top_k: value }));
                       }}
                     />
@@ -281,7 +281,7 @@ const ChatWindowSettings = ({
                       step={0.01}
                       defaultValue={0.9}
                       onChange={(value) => {
-                        console.log("Top-p changed to: ", value);
+                        // console.log("Top-p changed to: ", value);
                         setModelSettings((prev) => ({ ...prev, top_p: value }));
                       }}
                     />
@@ -292,7 +292,7 @@ const ChatWindowSettings = ({
                       step={1}
                       defaultValue={2048}
                       onChange={(value) => {
-                        console.log("Num ctx changed to: ", value);
+                        // console.log("Num ctx changed to: ", value);
                         setModelSettings((prev) => ({ ...prev, num_ctx: value }));
                       }}
                     />
@@ -377,7 +377,7 @@ const KillChatWindowButton = ({
   }, [alertDialogOpen]);
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    console.log("event", event);
+    // console.log("event", event);
     // Command + Alt/Option + k
     if (event.code === "KeyK" && event.metaKey && event.altKey) {
       const lastEndpoint = endpoints[endpoints.length - 1];
@@ -385,7 +385,7 @@ const KillChatWindowButton = ({
         setKillingOllamaClient(true);
       }
       killOllamaClient(lastEndpoint).then((killedEndpoint) => {
-        console.log(`Killed Ollama Client: ${killedEndpoint}`);
+        // console.log(`Killed Ollama Client: ${killedEndpoint}`);
         removeEndpoint(lastEndpoint);
         removeChatEntriesByEndpoint(lastEndpoint);
       }).catch((e) => {
@@ -395,7 +395,7 @@ const KillChatWindowButton = ({
           setKillingOllamaClient(false);
         }
       });
-      console.log("Command + Alt/Option + a pressed")
+      // console.log("Command + Alt/Option + a pressed")
     }
   };
 
@@ -508,7 +508,7 @@ export const ChatWindow = ({
   const {
     data: conversation,
   } = useConversation({ chatId: chatId, conversationId: conversationId, endpoint: endpoint });
-  console.log("CONVERSATION: ", conversation);
+  // console.log("CONVERSATION: ", conversation);
 
 
   // CULPRIT COME HERE
@@ -571,7 +571,7 @@ export const ChatWindow = ({
 
   useEffect(() => {
 
-    console.log(`Adding chat entries for endpoint: ${endpoint}`);
+    // console.log(`Adding chat entries for endpoint: ${endpoint}`);
     if (messages) {
       removeChatEntriesByEndpoint(endpoint);
       addChatEntries(endpoint, messages.messages.map(
@@ -602,7 +602,7 @@ export const ChatWindow = ({
     }
 
     return () => {
-      console.log(`Removing chat entries for endpoint: ${endpoint}`);
+      // console.log(`Removing chat entries for endpoint: ${endpoint}`);
       removeChatEntriesByEndpoint(endpoint);
     }
   }, [messages, chatId, conversationId, endpoint]);
@@ -612,7 +612,7 @@ export const ChatWindow = ({
 
   const handleIncomingLastMessage = (message: OllamaStreamMessage) => {
     if (message.data.message.done) {
-      console.log("Incoming message is done");
+      // console.log("Incoming message is done");
       onIncomingMessageProgress(endpoint, "change", "idle");
 
       if (message.data.messageMetrics !== null) {
@@ -634,19 +634,19 @@ export const ChatWindow = ({
 
   const handleMessage = (message: any) => {
     if (!chatId || !conversationId) {
-      console.log(`ChatId: ${chatId} or ConversationId: ${conversationId} is not set`);
+      // console.log(`ChatId: ${chatId} or ConversationId: ${conversationId} is not set`);
       return;
     }
 
 
     const incoming: OllamaStreamMessage = JSON.parse(JSON.stringify(message));
-    console.log(incoming);
+    // console.log(incoming);
 
     const { messageChunkId } = incoming.data;
-    console.log(`messageChunkId: ${messageChunkId}`);
+    // console.log(`messageChunkId: ${messageChunkId}`);
     // const chatEntry = chatEntries.find((entry) => entry.id === messageChunkId)
     if (doesChatEntryExist(endpoint, messageChunkId)) {
-      console.log(`This message chunk already exists: ${messageChunkId}`);
+      // console.log(`This message chunk already exists: ${messageChunkId}`);
       addContentToChatEntryById(
         endpoint,
         messageChunkId,
@@ -664,7 +664,7 @@ export const ChatWindow = ({
       return;
     }
 
-    console.log(`This message chunk does not exist: ${messageChunkId}`);
+    // console.log(`This message chunk does not exist: ${messageChunkId}`);
     // create chat entry
     const newChatEntry: ChatEntry = {
       id: messageChunkId,
@@ -687,7 +687,7 @@ export const ChatWindow = ({
   };
 
   useEffect(() => {
-    console.log(`Registering handler for ChatId: ${chatId}, ConversationId: ${conversationId}, Endpoint: ${endpoint}`);
+    // console.log(`Registering handler for ChatId: ${chatId}, ConversationId: ${conversationId}, Endpoint: ${endpoint}`);
     registerHandler(endpoint, handleMessage);
     return () => {
       unregisterHandler(endpoint);
@@ -732,7 +732,7 @@ export const ChatWindow = ({
             <KillChatWindowButton
               endpoint={endpoint}
               onKill={(endpoint) => {
-                console.log(`Killing Ollama Client: ${endpoint}`);
+                // console.log(`Killing Ollama Client: ${endpoint}`);
                 removeEndpoint(endpoint);
                 removeChatEntriesByEndpoint(endpoint);
               }}

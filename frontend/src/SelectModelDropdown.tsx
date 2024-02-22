@@ -66,7 +66,7 @@ export const SelectModel = memo((
                                     key={model.name}
                                     value={model.name}
                                     onSelect={(currentValue) => {
-                                        console.log("currentValue", currentValue);
+                                        // console.log("currentValue", currentValue);
                                         onModelChange(currentValue);
                                         setOpen(false)
                                     }}

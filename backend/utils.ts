@@ -14,7 +14,7 @@ export async function retryOperation<T>(
         } catch (error) {
             lastError = error as Error;
             const delay = Math.min(maxDelayMs, delayMs * Math.pow(2, attempt)) + Math.random() * 100; // Adding jitter
-            console.log(`Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+            // console.log(`Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
             await new Promise((resolve) => setTimeout(resolve, delay));
         }
     }

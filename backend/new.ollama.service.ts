@@ -1,11 +1,11 @@
-import { $, spawn, type Subprocess } from "bun";
+import { spawn, type Subprocess } from "bun";
 import { Ollama } from "ollama";
 import { createDbEndpoint, removeDbEndpoint } from "./db";
 
 async function isPortAvailable(port: number) {
     return new Promise<boolean>((resolve) => {
         spawn(["lsof", "-i", `:${port}`], {
-            onExit: (subprocess, exitCode, signalCode, error) => {
+            onExit: (_subprocess, exitCode, _signalCode, _error) => {
                 console.debug(`lsof -i :${port} exited with code ${exitCode}`);
                 if (exitCode === 1) {
                     resolve(true);
@@ -45,10 +45,10 @@ function createOllamaServerManager(): OllamaManager {
 
     const currentlyRespondingOllamaServers: Map<`${string}-${number}`, { abortController: AbortController }> = new Map();
     const abortCurrentlyRunningChat = () => {
-        console.log("Aborting currently running chat", currentlyRespondingOllamaServers);
-        for (const [key, { abortController }] of currentlyRespondingOllamaServers) {
+        // console.log("Aborting currently running chat", currentlyRespondingOllamaServers);
+        for (const [_, { abortController }] of currentlyRespondingOllamaServers) {
             // abort with reason "stopped currently running chat"
-            console.log(`Aborting chat with key ${key}`);
+            // console.log(`Aborting chat with key ${key}`);
             abortController.abort();
         }
     };
@@ -91,21 +91,13 @@ function createOllamaServerManager(): OllamaManager {
                 OLLAMA_HOST: `127.0.0.1:${nextPort}`,
             },
             onExit: (subprocess, exitCode, signalCode, error) => {
-                console.log("Ollama server exited", newEndpoint, exitCode, signalCode, error);
+                // console.log("Ollama server exited", newEndpoint, exitCode, signalCode, error);
                 removeDbEndpoint(newEndpoint);
                 ollamaServers.delete(newEndpoint);
             },
         });
 
         const ollamaClient = new Ollama({ host: newEndpoint });
-        // check if the ollama server is running by trying to list the models.
-        // try {
-        //     await ollamaClient.list();
-        // } catch (e: unknown) {
-        //     console.error("Failed to connect to ollama server", e);
-        //     proc.kill();
-        //     return;
-        // }
 
         const endpointDbId = createDbEndpoint(newEndpoint);
         if (!endpointDbId) {
@@ -124,7 +116,7 @@ function createOllamaServerManager(): OllamaManager {
         }
         server.subprocess.kill();
 
-        console.log(`Ollama server that runs on ${id} exited with code ${await server.subprocess.exited}`);
+        // console.log(`Ollama server that runs on ${id} exited with code ${await server.subprocess.exited}`);
         removeDbEndpoint(id);
         ollamaServers.delete(id);
         return true;

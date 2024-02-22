@@ -1,27 +1,9 @@
 import app from './routes';
-import type { ChatResponse, ModelResponse, Ollama } from "ollama";
-// import {
-//     type OllamaClient,
-//     getEndpointsMap,
-//     getEndpoints,
-//     getOllamaClients,
-//     addOllamaServer,
-//     killOllamaServer,
-//     killAllOllamaServers,
-// } from "./ollama.service";
+import type { ChatResponse, Ollama } from "ollama";
 
 import { ollamaServerManager } from './new.ollama.service';
 
 import {
-    createDbEndpoint,
-    getAllDbEndpoints,
-    removeDbEndpoint,
-    getAllChats,
-    createChat,
-    createConversation,
-    getDbEndpoint,
-    getConversationsByChatId
-    , getEndpointByConversationId,
     getConversationByChatIdAndEndpoint,
     addMessageToConversation,
     getMessagesByConversationId,
@@ -82,39 +64,21 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
 
 
             if (payload.type === "chat-message") {
-                // data: {
-                //   // isFirstMessage is used to determine if this is first time the user is sending a message to the associated chat.
-                //   isFirstMessage: true,
-
-                //   // currently, the chatId is not used.
-                //   // if there is no chatId, it means we have to create a new chat
-                //   chatId: newChatId,
-                //   message: msg,
-                //   model: model,
-                //   images: imagesToSend, // imagesToSend is Uint8Array[] or undefined
-                //   // Map is not serializable. Convert to array of objects
-                //   endpointsToChat: Array.from(endpointsToChat.entries()).map(([endpoint, isEnabled]) => {
-                //     return { endpoint, isEnabled }
-                //   }),
-                //   endpointsSelectedModel: Array.from(endpointsSelectedModel.entries()).map(([endpoint, model]) => {
-                //     return { endpoint, model }
-                //   }),
-                // },
 
                 const isFirstChatMessage = payload.data.isFirstMessage;
                 if (isFirstChatMessage === undefined || isFirstChatMessage === null || typeof isFirstChatMessage !== 'boolean') {
-                    console.log(`${isFirstChatMessage}`);
-                    console.log("isFirstChatMessage is not set or is not a boolean");
+                    // console.log(`${isFirstChatMessage}`);
+                    // console.log("isFirstChatMessage is not set or is not a boolean");
                     return;
                 }
                 const chatId = payload.data.chatId;
                 if (chatId === undefined || chatId === null || typeof chatId !== 'number') {
-                    console.log("chatId is not set or is not a number");
+                    // console.log("chatId is not set or is not a number");
                     return;
                 }
 
                 const endpointsToChatFromPayload: Map<string, boolean> = new Map();
-                console.log(payload.data.endpointsToChat);
+                // console.log(payload.data.endpointsToChat);
                 if (
                     payload.data.endpointsToChat
                     && Array.isArray(payload.data.endpointsToChat)
@@ -130,7 +94,7 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                     }
                 }
                 const endpointsSelectedModel: Map<string, string> = new Map();
-                console.log(payload.data.endpointsSelectedModel);
+                // console.log(payload.data.endpointsSelectedModel);
                 if (
                     payload.data.endpointsSelectedModel
                     && Array.isArray(payload.data.endpointsSelectedModel)
@@ -157,11 +121,11 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                     // find conversation_id that is associated with chatId and endpoint.
                     const conversation = getConversationByChatIdAndEndpoint(chatId, endpoint);
                     if (!conversation) {
-                        console.log(`No conversation found for chatId: ${chatId} and endpoint: ${endpoint}. Skipping...`);
+                        // console.log(`No conversation found for chatId: ${chatId} and endpoint: ${endpoint}. Skipping...`);
                         return;
                     }
                     // add a new message to the conversation.
-                    console.log(`Adding user message to conversation ${conversation.conversation_id}`);
+                    // console.log(`Adding user message to conversation ${conversation.conversation_id}`);
                     addMessageToConversation(conversation.conversation_id, {
                         content: payload.data.message,
                         image: payload.data?.images?.[0] || null,
@@ -182,7 +146,7 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                         ],
                     });
                     if (!response) {
-                        console.log("No response from ollama client");
+                        // console.log("No response from ollama client");
                         return;
                     }
 
@@ -197,11 +161,11 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                     // generate unique id for this message chunk
                     const messageChunkId = crypto.randomUUID();
                     let calculatedMsgMetrics: ReturnType<typeof calculateMessageMetrics> | null = null;
-                    console.log(`Endpoint ${ollamaServer.endpoint} (model: ${model}) responded with message chunk id: ${messageChunkId}`);
+                    // console.log(`Endpoint ${ollamaServer.endpoint} (model: ${model}) responded with message chunk id: ${messageChunkId}`);
                     let abortChatResponse = false;
                     for await (const message of response) {
                         if (signal && signal.aborted) {
-                            console.log("Aborting response sending...");
+                            // console.log("Aborting response sending...");
                             abortChatResponse = true;
                             message.done = true;
                         }
@@ -244,7 +208,7 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                     fullMessage.content = messageParts.join("");
 
                     // store the message in the database
-                    console.log(`Adding ollama model message to conversation ${conversation.conversation_id}`);
+                    // console.log(`Adding ollama model message to conversation ${conversation.conversation_id}`);
                     const newInsertedMsgId = addMessageToConversation(conversation.conversation_id, {
                         content: fullMessage.content,
                         role: fullMessage.role as "user" | "assistant" | "system",
@@ -263,14 +227,14 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                 // getAllDbEndpoints()
                 const promises = endpointsByChatId.map((dbEndpoint) => {
                     const { endpoint_id: _, endpoint } = dbEndpoint;
-                    console.log(`Checking if endpoint ${endpoint} is enabled for chat`);
+                    // console.log(`Checking if endpoint ${endpoint} is enabled for chat`);
                     let isEndpointEnabledForChat = endpointsToChatFromPayload.get(endpoint);
                     let endpointToUse: string | null = null;
                     if (
                         isEndpointEnabledForChat === undefined
                         || (isEndpointEnabledForChat !== undefined && isEndpointEnabledForChat === false)
                     ) {
-                        console.log(`Endpoint ${endpoint} is not enabled for chat`);
+                        // console.log(`Endpoint ${endpoint} is not enabled for chat`);
                         return;
                     }
                     endpointToUse = endpoint;
@@ -290,25 +254,25 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                     //         null
                     // );
                     if (!modelToUse) {
-                        console.log(`Endpoint ${endpoint} doesn't have a model selected`);
+                        // console.log(`Endpoint ${endpoint} doesn't have a model selected`);
                         return;
                     }
 
                     if (endpointToUse) {
                         const ollamaClient = ollamaServerManager.get(endpointToUse);
                         if (ollamaClient) {
-                            console.log(`Sending response to client for endpoint ${endpoint}, model: ${modelToUse}, chatId: ${chatId}, isFirstChatMessage: ${isFirstChatMessage}`);
+                            // console.log(`Sending response to client for endpoint ${endpoint}, model: ${modelToUse}, chatId: ${chatId}, isFirstChatMessage: ${isFirstChatMessage}`);
                             const abortSignal = ollamaServerManager.addRunningOllamaServer(chatId, endpoint);
                             return sendResponse(ollamaClient, modelToUse, endpoint, chatId, isFirstChatMessage, abortSignal);
                         }
                     } else {
-                        console.log(`Endpoint ${endpoint} is enabled for chat but no Ollama client is found for it`);
+                        // console.log(`Endpoint ${endpoint} is enabled for chat but no Ollama server is found for it`);
                     }
                 });
 
                 Promise.all(promises.filter((p) => p !== undefined))
                     .then(async (results) => {
-                        console.log(`All responses have been sent to the client`);
+                        // console.log(`All responses have been sent to the client`);
                         let lastResult: Awaited<ReturnType<typeof sendResponse>> | null = null;
                         for (const result of results) {
                             if (!lastResult) {
@@ -322,15 +286,15 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
 
                             }
                         }
-                        console.log(`LAST RESULT:`);
+                        // console.log(`LAST RESULT:`);
                         if (lastResult) {
-                            console.log(`LAST RESULT:`);
-                            console.log(lastResult);
+                            // console.log(`LAST RESULT:`);
+                            // console.log(lastResult);
                             if (lastResult.isFirstChatMessage) {
                                 const conversationText = `${'\n'}Here is the conversation between user and assistant:\n"""${'\n'}${lastResult.messages
                                     .map(message => `${message.role}: ${message.content}`)
                                     .join('\n')}${'\n'}"""${'\n'}Deliver a single short concise simple meaningful title that you determine to be the most appropriate summary of the above conversation.${'\n'}Provide your response in the following YAML format:${'\n'}\`\`\`yaml${'\n'}title: "<Your single, most appropriate title here>"${'\n'}\`\`\`${'\n'}`;
-                                console.log(conversationText);
+                                // console.log(conversationText);
 
                                 const MAX_CHAT_TITLE_CREATION_ATTEMPTS = 10;
                                 let chatTitleCreationAttempt = 0;
@@ -344,19 +308,10 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                                         ],
                                         stream: false,
                                     });
-                                    console.log(`Chat title attempt: ${chatTitleResponse.message.content}`);
-                                    // if (!chatTitleResponse.message.content.startsWith("title: \"") && !chatTitleResponse.message.content.endsWith("\"")) {
-                                    //     chatTitleCreationAttempt++;
-                                    //     console.log(`Chat title creation attempt ${chatTitleCreationAttempt}/${MAX_CHAT_TITLE_CREATION_ATTEMPTS} failed. Retrying...`);
-                                    //     continue;
-                                    // }
-                                    // let chatTitle = chatTitleResponse.message.content.replace("title: \"", "");
-                                    // // only remove the last double quote
-                                    // chatTitle = chatTitle.substring(0, chatTitle.length - 1);
                                     const chatTitle = extractChatTitleFromChatResponse(chatTitleResponse.message.content);
                                     if (!chatTitle) {
                                         chatTitleCreationAttempt++;
-                                        console.log(`Chat title creation attempt ${chatTitleCreationAttempt}/${MAX_CHAT_TITLE_CREATION_ATTEMPTS} failed. Retrying...`);
+                                        // console.log(`Chat title creation attempt ${chatTitleCreationAttempt}/${MAX_CHAT_TITLE_CREATION_ATTEMPTS} failed. Retrying...`);
                                         continue;
                                     }
 
@@ -372,7 +327,7 @@ const server = Bun.serve<{ id: string; createdAt: string }>({
                                             endpoint: lastResult.ollamaServer.endpoint,
                                         })
                                     );
-                                    console.log(`Chat title created: ${chatTitle}`);
+                                    // console.log(`Chat title created: ${chatTitle}`);
                                     chatTitleCreationSuccess = true;
                                     break;
                                 }
@@ -413,16 +368,9 @@ const cleanUpAndExit = async () => {
     let retry = 0;
     while (retry < MAX_RETRY_ON_CLEANUP) {
         try {
-            console.log(`Killing all Ollama servers... Attempt ${retry + 1}/${MAX_RETRY_ON_CLEANUP}`);
+            // console.log(`Killing all Ollama servers... Attempt ${retry + 1}/${MAX_RETRY_ON_CLEANUP}`);
             const statuses = await ollamaServerManager.removeAll();
 
-            console.log(statuses);
-            // for (const status of statuses) {
-            //     if (status.success) {
-            //         removeDbEndpoint(status.endpoint);
-            //     }
-            // }
-            // break;
             if (statuses.every((status) => status.success)) {
                 // if all servers were killed successfully, break out of the loop
                 break;
@@ -435,13 +383,13 @@ const cleanUpAndExit = async () => {
 
     server.stop();
     httpServer.stop();
-    console.log("Goodbye!");
+    // console.log("Goodbye!");
 }
 
 async function handleExit(signal: string) {
-    console.log(`Received ${signal}, cleaning up...`);
+    // console.log(`Received ${signal}, cleaning up...`);
     await cleanUpAndExit();
-    console.log('Cleanup completed, exiting now.');
+    // console.log('Cleanup completed, exiting now.');
     process.exit();
 }
 
@@ -463,7 +411,7 @@ process.on('unhandledRejection', async (reason, promise) => {
 
 process.on('beforeExit', async () => {
     removeAllDbEndpoints();
-    console.log('Goodbye!');
+    // console.log('Goodbye!');
     await cleanUpAndExit();
     process.exit();
 });

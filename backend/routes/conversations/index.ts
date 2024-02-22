@@ -7,9 +7,9 @@ const conversations = new Hono();
 
 
 conversations.post('/', async (ctx) => {
-    console.log(`${ctx.req.url}, ${ctx.req.method}, Creating new conversation...`)
+    // console.log(`${ctx.req.url}, ${ctx.req.method}, Creating new conversation...`)
     const body = await ctx.req.json();
-    console.log(body);
+    // console.log(body);
     if (!(body.model && typeof body.model === "string" && body.model !== "")
         || !(body.chatId && typeof body.chatId === "number")
         || !(body.endpointId && typeof body.endpointId === "number")
@@ -64,12 +64,12 @@ conversations.get('/:conversationId', async (ctx) => {
 });
 
 conversations.get('/:conversationId/messages', async (ctx) => {
-    console.log(`${ctx.req.url}, ${ctx.req.method}, Getting messages for conversation...`);
+    // console.log(`${ctx.req.url}, ${ctx.req.method}, Getting messages for conversation...`);
     const conversationIdStr = ctx.req.param('conversationId');
     // const chatId = ctx.req.query("chatId");
     // const endpoint = ctx.req.query("endpoint");
     // const endpointId = ctx.req.query("endpointId");
-    // console.log(`chatId: ${chatId}, endpoint: ${endpoint}, endpointId: ${endpointId}, conversationId: ${conversationIdStr}`)
+    // // console.log(`chatId: ${chatId}, endpoint: ${endpoint}, endpointId: ${endpointId}, conversationId: ${conversationIdStr}`)
     if (!conversationIdStr || isNaN(parseInt(conversationIdStr))) {
         return ctx.json({ error: "Invalid conversationId" }, 400);
     }
@@ -83,8 +83,8 @@ conversations.get('/:conversationId/messages', async (ctx) => {
 
     // get messages for conversationId
     const messages = getMessagesByConversationId(conversationId);
-    // console.log(`Messages:`);
-    // console.log(messages);
+    // // console.log(`Messages:`);
+    // // console.log(messages);
     return ctx.json({ messages });
 });
 

@@ -93,7 +93,7 @@ const ChatSideBarItem = ({
                                     deleteChat({
                                         chatId: chat.chat_id,
                                     }).then(() => {
-                                        console.log(`chat ${chat.chat_id} deleted`);
+                                        // console.log(`chat ${chat.chat_id} deleted`);
                                         onChatSelect(undefined);
                                     })
                                 }}
@@ -168,7 +168,7 @@ const ChatSideBarItem = ({
                         className="flex gap-2 m-0.5 p-2 rounded  text-sm cursor-pointer focus:ring-0 hover:bg-[rgb(240,240,240)] hover:text-[rgb(18,18,18)]"
                         onClick={(e) => {
                             e.stopPropagation();
-                            console.log('rename');
+                            // console.log('rename');
                         }}
                     >
                         <PencilLine className="w-4 h-4" />
@@ -181,7 +181,7 @@ const ChatSideBarItem = ({
                             deleteChat({
                                 chatId: chat.chat_id,
                             }).then(() => {
-                                console.log(`chat ${chat.chat_id} deleted`);
+                                // console.log(`chat ${chat.chat_id} deleted`);
                                 onChatSelect(undefined);
                             })
                         }}

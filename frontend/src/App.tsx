@@ -110,10 +110,10 @@ function App() {
         })
     );
 
-    console.log("HANDLE_NEW_MESSAGE", conversations);
+    // console.log("HANDLE_NEW_MESSAGE", conversations);
 
     // const imageFiles = images?.map((image) => {
-    //   console.log(`image.file: ${image.file.name}`);
+    //   // console.log(`image.file: ${image.file.name}`);
     //   return image.file
     // });
 
@@ -137,7 +137,7 @@ function App() {
       return image.converted;
     });
 
-    console.log(`Sending message: ${msg} with ${imagesToSend?.length} images`);
+    // console.log(`Sending message: ${msg} with ${imagesToSend?.length} images`);
 
 
     // in the backend the server will have to know which endpoints to send the message to and which model to use

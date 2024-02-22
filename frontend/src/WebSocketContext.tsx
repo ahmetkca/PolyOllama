@@ -69,8 +69,8 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
     const { createChatEntriesByEndpoint } = useChatEntriesStore((state) => state);
 
     useEffect(() => {
-        console.log(`useffect socket: ${socket}`);
-        console.log(`WebSocket readyState: ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
+        // console.log(`useffect socket: ${socket}`);
+        // console.log(`WebSocket readyState: ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
     }, [socket]);
 
     // useEffect(() => {
@@ -88,12 +88,12 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
         socket.current = newSocket;
 
         newSocket.onopen = (event) => {
-            console.log('WebSocket is connected.', event);
-            console.log(`WebSocket readyState: ${websocketReadyStateToString(newSocket.readyState)}`);
+            // console.log('WebSocket is connected.', event);
+            // console.log(`WebSocket readyState: ${websocketReadyStateToString(newSocket.readyState)}`);
             setIsConnected(true);
         };
         newSocket.onclose = () => {
-            console.log('WebSocket is closed.');
+            // console.log('WebSocket is closed.');
             // for (const endpoint of messageHandlers.keys()) {
             //     unregisterHandler(endpoint);
             // }
@@ -108,10 +108,10 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
         newSocket.onmessage = (event: MessageEvent) => {
             // Handle incoming messages
             const message: Message = JSON.parse(event.data);
-            // console.log('WebSocket message received:', message);
+            // // console.log('WebSocket message received:', message);
 
             if (message.type === MessageType.ChatTitleCreated) {
-                console.log('abc Chat title created:', message);
+                // console.log('abc Chat title created:', message);
                 // handlerId for chatTitleCreatedHandlers is the `a unique string`-`chatId number`
                 // ex. "sidebar_chatTitleCreatedHandler-1", "chat_windows_chatTitleCreatedHandler-2"
                 // we need to call the handler for each handlerId that matches the chatId
@@ -128,7 +128,7 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
                     const [_, chatIdStr] = handlerId.split('-');
                     const chatId = parseInt(chatIdStr);
                     if (dataCasted.chatId === chatId) {
-                        console.log(`abc Calling chatTitleCreatedHandler for chatId: ${chatId}`);
+                        // console.log(`abc Calling chatTitleCreatedHandler for chatId: ${chatId}`);
                         handler(message);
                     }
                 }
@@ -137,7 +137,7 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
 
             if (message.type === MessageType.RegisterEndpoints) {
                 const { endpoints } = message.data;
-                console.log('Registering endpoints:', endpoints)
+                // console.log('Registering endpoints:', endpoints)
                 setEndpoints(endpoints);
                 for (const endpoint of endpoints) {
                     createChatEntriesByEndpoint(endpoint);
@@ -145,7 +145,7 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
             }
 
             if (message.type === MessageType.ChatMessage) {
-                // console.log('Handling chat message:', message);
+                // // console.log('Handling chat message:', message);
                 if (message.endpoint === null) {
                     console.warn('Message endpoint is null. Message not handled.');
                     return;
@@ -166,7 +166,7 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
 
 
         return () => {
-            console.log(`WebSocket is closing. (readyState: ${websocketReadyStateToString(newSocket.readyState)})`);
+            // console.log(`WebSocket is closing. (readyState: ${websocketReadyStateToString(newSocket.readyState)})`);
             if (newSocket.readyState === WebSocket.OPEN) {
                 newSocket.close();
             }
@@ -174,11 +174,11 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
     }, [host, port]);
 
     const sendMessage = (message: any) => {
-        console.log(`Sending message, socket: ${socket.current}`);
-        console.log(`Sending message, WebSocket readyState: ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
+        // console.log(`Sending message, socket: ${socket.current}`);
+        // console.log(`Sending message, WebSocket readyState: ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
 
-        console.log(`Sending message:`);
-        console.log(message);
+        // console.log(`Sending message:`);
+        // console.log(message);
 
         if (socket?.current && socket?.current?.readyState === WebSocket.OPEN) {
 
@@ -189,12 +189,12 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
                 return value;
             }
 
-            console.log(`Sending message:`);
-            console.log(message);
+            // console.log(`Sending message:`);
+            // console.log(message);
             const stringifiedMessage = JSON.stringify(message, replacer);
-            console.log(`Sending message: ${stringifiedMessage}`);
+            // console.log(`Sending message: ${stringifiedMessage}`);
 
-            console.log(`afg ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
+            // console.log(`afg ${websocketReadyStateToString(socket?.current?.readyState ?? -1)}`);
             socket.current.send(stringifiedMessage);
         } else {
             console.warn('WebSocket is not connected. Message not sent.');
@@ -202,23 +202,23 @@ export const WebSocketProvider: FC<WebSocketProviderProps> = ({ children, host =
     };
 
     const registerHandler = useCallback((endpoint: string, handler: (message: Message) => void) => {
-        console.log(`Registering handler for endpoint: ${endpoint}`);
+        // console.log(`Registering handler for endpoint: ${endpoint}`);
         newMessageHandlers.current.set(endpoint, handler);
     }, []);
 
     const unregisterHandler = useCallback((endpoint: string) => {
-        console.log(`Unregistering handler for endpoint: ${endpoint}`);
+        // console.log(`Unregistering handler for endpoint: ${endpoint}`);
         newMessageHandlers.current.delete(endpoint);
     }, []);
 
 
     const registerChatTitleCreatedHandler = useCallback((handlerId: `${string}-${number}`, handler: (message: Message) => void) => {
-        console.log('abc Registering chatTitleCreatedHandler:', handlerId, handler)
+        // console.log('abc Registering chatTitleCreatedHandler:', handlerId, handler)
         chatTitleCreatedHandlers.current.set(handlerId, handler);
     }, []);
 
     const unregisterChatTitleCreatedHandler = useCallback((handlerId: `${string}-${number}`) => {
-        console.log('abc Unregistering chatTitleCreatedHandler:', handlerId);
+        // console.log('abc Unregistering chatTitleCreatedHandler:', handlerId);
         chatTitleCreatedHandlers.current.delete(handlerId);
     }, []);
 

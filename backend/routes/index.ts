@@ -30,8 +30,8 @@ app.delete('/kill-ollama-client', async (c, next) => {
         const success = await ollamaServerManager.remove(body.endpoint);
         if (success) {
             // removeDbEndpoint(body.endpoint);
-            console.log("Removed endpoint", body.endpoint);
-            console.log(getAllDbEndpoints())
+            // console.log("Removed endpoint", body.endpoint);
+            // console.log(getAllDbEndpoints())
         }
         return c.json({ success });
     } catch (e: any) {

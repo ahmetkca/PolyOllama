@@ -18,14 +18,14 @@ export const ChatTitle = ({
     const { registerChatTitleCreatedHandler, unregisterChatTitleCreatedHandler } = useWebSocket();
 
     const handleChatTitleCreated = (message: any) => {
-        console.log('abc message', message, chatId, location);
+        // console.log('abc message', message, chatId, location);
         const { chatId: chatIdFromWS, title: newTitle } = message.data as { chatId: number, title: string };
-        console.log(`abc chatIdFromWS: ${chatIdFromWS}, chatId: ${chatId}`);
+        // console.log(`abc chatIdFromWS: ${chatIdFromWS}, chatId: ${chatId}`);
         if (chatIdFromWS === chatId) {
-            console.log('abc chatIdFromWS === chatId');
+            // console.log('abc chatIdFromWS === chatId');
             setTrigger((prev) => ({ count: prev.count + 1, title: newTitle }));
         } else {
-            console.log('abc chatIdFromWS !== chatId');
+            // console.log('abc chatIdFromWS !== chatId');
         }
     }
 

@@ -45,14 +45,14 @@ const DynamicChatLayout = ({
     }, []);
 
     const renderPanels = () => {
-        // console.log(`sentMessage:`)
-        // console.log(sentMessage);
+        // // console.log(`sentMessage:`)
+        // // console.log(sentMessage);
         const tempEndpoints = [...endpoints];
         const panels = [];
         let remaining = endpoints.length;
 
         while (remaining > 0) {
-            // console.log(`remaining: ${remaining}`);
+            // // console.log(`remaining: ${remaining}`);
             let panelCount = Math.min(remaining, maxPanelsPerGroup);
             remaining -= panelCount;
 
@@ -73,7 +73,7 @@ const DynamicChatLayout = ({
                                     >
                                         <ChatWindow
                                             endpoint={tempEndpoints.shift() as string}
-                                            onIncomingMessageProgress={(_1, _2, _3) => {}}
+                                            onIncomingMessageProgress={(_1, _2, _3) => { }}
                                         // sentMessage={sentMessage}
                                         />
                                     </ResizablePanel>
@@ -87,7 +87,7 @@ const DynamicChatLayout = ({
             panels.push(panelGroup);
 
             if (remaining > 0) {
-                console.log(`Adding handle between panel groups`);
+                // console.log(`Adding handle between panel groups`);
                 panels.push(<ResizableHandle key={`handle-${nanoid()}`} withHandle />);
             }
         }

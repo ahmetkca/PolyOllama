@@ -14,10 +14,9 @@ import { retryOperation } from '../../utils';
 
 const chats = new Hono();
 
-
 chats.post('/', async (ctx) => {
     const body = await ctx.req.json();
-    console.log(body);
+    // console.log(body);
     if (!body.title) {
         return ctx.json({ error: "No title provided" }, 400);
     }
@@ -30,13 +29,13 @@ chats.post('/', async (ctx) => {
 });
 
 chats.get('/', (ctx) => {
-    console.log(`${ctx.req.url}, ${ctx.req.method}, Getting all chats...`);
+    // console.log(`${ctx.req.url}, ${ctx.req.method}, Getting all chats...`);
     try {
         const chats = getAllChats();
         const conversationsByChats = chats.map((chat) => {
             return getConversationsByChatId(chat.chat_id);
         })
-        console.log(chats);
+        // console.log(chats);
         const chatsWithConversations = chats.map((chat, index) => {
             return {
                 ...chat,
@@ -89,12 +88,12 @@ chats.get('/:chatId', (ctx) => {
     })
 
     const a = { chat: { ...chat, conversations: conversationsWithEndpoint } };
-    console.log(a);
+    // console.log(a);
     return ctx.json({ chat: { ...chat, conversations: conversationsWithEndpoint } });
 });
 
 chats.delete('/:chatId', (ctx) => {
-    console.log(`${ctx.req.url}, ${ctx.req.method}, Deleting chat...`)
+    // console.log(`${ctx.req.url}, ${ctx.req.method}, Deleting chat...`)
     const chatIdStr = ctx.req.param('chatId');
     if (!chatIdStr) {
         return ctx.json({ error: "No chatId provided" }, 400);
@@ -113,7 +112,7 @@ chats.delete('/:chatId', (ctx) => {
 });
 
 chats.put('/:chatId/assign-endpoints-to-conversations', async (ctx) => {
-    console.log(`${ctx.req.url}, ${ctx.req.method}, Assigning endpoints to conversations...`);
+    // console.log(`${ctx.req.url}, ${ctx.req.method}, Assigning endpoints to conversations...`);
     const chatIdStr = ctx.req.param('chatId');
     const chatId = parseInt(chatIdStr);
     if (isNaN(chatId)) {
@@ -126,15 +125,15 @@ chats.put('/:chatId/assign-endpoints-to-conversations', async (ctx) => {
     if (!Array.isArray(body.endpoints)) {
         return ctx.json({ error: "Endpoints must be an array" }, 400);
     }
-    console.log(`Endpoints from body: ${body.endpoints}`);
+    // console.log(`Endpoints from body: ${body.endpoints}`);
     const conversations = getConversationsByChatId(chatId);
     const conversationsWithoutEndpoint = conversations.filter((conversation) => conversation.endpoint_id === null);
-    console.log(`There are ${conversationsWithoutEndpoint.length} conversations without an endpoint.`);
+    // console.log(`There are ${conversationsWithoutEndpoint.length} conversations without an endpoint.`);
 
     const unassignedEndpointsFromDb = getAllNonAssignedEndpointsByChatId(chatId);
-    console.log(`Got ${unassignedEndpointsFromDb.length} unassigned endpoints from the database.`);
+    // console.log(`Got ${unassignedEndpointsFromDb.length} unassigned endpoints from the database.`);
     const unassignedEndpoints = unassignedEndpointsFromDb.filter((endpoint) => body.endpoints.includes(endpoint.endpoint));
-    console.log(`Only ${unassignedEndpoints.length} of the unassigned endpoints are in the body.`);
+    // console.log(`Only ${unassignedEndpoints.length} of the unassigned endpoints are in the body.`);
 
     // get models from each ollama server using endpoints
     const endpointsWithModels = (await Promise.all(
@@ -155,7 +154,7 @@ chats.put('/:chatId/assign-endpoints-to-conversations', async (ctx) => {
             // check if the model is available in the endpoint
             const endpointWithModel = endpointsWithModels.find((ep) => ep.endpoint === endpoint);
             if (!endpointWithModel) {
-                console.log(`Endpoint ${endpoint} does not have any models.`)
+                // console.log(`Endpoint ${endpoint} does not have any models.`)
                 continue;
             }
             if (endpointWithModel.models.includes(model)) {
@@ -163,7 +162,7 @@ chats.put('/:chatId/assign-endpoints-to-conversations', async (ctx) => {
                 if (assignEndpointToConversation(conversation_id, endpoint_id)) {
                     assigned = true;
                     assignedEndpointsWithConversations.push({ conversation_id, endpoint_id });
-                    console.log(`Assigning endpoint ${endpoint} to conversation ${model}`);
+                    // console.log(`Assigning endpoint ${endpoint} to conversation ${model}`);
                     break;
                 }
             }
@@ -172,7 +171,7 @@ chats.put('/:chatId/assign-endpoints-to-conversations', async (ctx) => {
             console.log(`Failed to assign endpoint to conversation ${model}`);
         }
     }
-    console.log(`Assigned ${assignedEndpointsWithConversations.length}/${conversationsWithoutEndpoint.length} endpoints to conversations.`);
+    // console.log(`Assigned ${assignedEndpointsWithConversations.length}/${conversationsWithoutEndpoint.length} endpoints to conversations.`);
     return ctx.json({ conversationsWithAssignedEndpoints: assignedEndpointsWithConversations });
 });
 

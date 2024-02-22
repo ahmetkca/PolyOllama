@@ -108,7 +108,7 @@ export const useChatEntriesStore = create<ChatEntriesStore>((set, get) => ({
         const hashedEndpointIndex = hashEndpoints(endpoint);
         set((state) => {
             const updatedAllChatEntries = [...state.allChatEntries];
-            console.log("createChatEntriesByEndpoint", hashedEndpointIndex, updatedAllChatEntries)
+            // console.log("createChatEntriesByEndpoint", hashedEndpointIndex, updatedAllChatEntries)
             updatedAllChatEntries[hashedEndpointIndex] = [];
             const updatedChatEntriesIndexByEndpoint = new Map(state.chatEntriesIndexByEndpoint);
             updatedChatEntriesIndexByEndpoint.set(endpoint, hashedEndpointIndex);
@@ -120,10 +120,10 @@ export const useChatEntriesStore = create<ChatEntriesStore>((set, get) => ({
 
         set((state) => {
             const index = get().getChatEntriesIndexByEndpoint(endpoint);
-            console.log(`removeChatEntriesByEndpoint`, index, endpoint);
+            // console.log(`removeChatEntriesByEndpoint`, index, endpoint);
 
             const updatedAllChatEntries = [...state.allChatEntries];
-            console.log("removeChatEntriesByEndpoint", updatedAllChatEntries, index)
+            // console.log("removeChatEntriesByEndpoint", updatedAllChatEntries, index)
             updatedAllChatEntries[index] = [];
             const updatedChatEntriesIndexByEndpoint = new Map(state.chatEntriesIndexByEndpoint);
             updatedChatEntriesIndexByEndpoint.delete(endpoint);
@@ -146,13 +146,13 @@ export const useChatEntriesStore = create<ChatEntriesStore>((set, get) => ({
     addChatEntry: (endpoint, chatEntry) => {
 
         const index = get().getChatEntriesIndexByEndpoint(endpoint);
-        console.log("addChatEntry", index, endpoint, chatEntry);
+        // console.log("addChatEntry", index, endpoint, chatEntry);
         // if (index) {
         set((state) => {
             const newAllChatEntries = [...state.allChatEntries];
-            console.log("before", newAllChatEntries);
+            // console.log("before", newAllChatEntries);
             newAllChatEntries[index].push(chatEntry);
-            console.log("after", newAllChatEntries);
+            // console.log("after", newAllChatEntries);
             return { allChatEntries: newAllChatEntries };
         });
 
@@ -208,7 +208,7 @@ export const useChatEntriesStore = create<ChatEntriesStore>((set, get) => ({
     // chatEntries expected to be in order
     addChatEntries: (endpoint, chatEntries) => {
         const index = get().getChatEntriesIndexByEndpoint(endpoint);
-        console.log("addChatEntries", index, endpoint, chatEntries);
+        // console.log("addChatEntries", index, endpoint, chatEntries);
 
         set((state) => {
             const newAllChatEntries = [...state.allChatEntries];

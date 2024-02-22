@@ -88,7 +88,7 @@ export const useChat = (chatId?: number) => {
         fetcher
     );
 
-    console.log('useChat', data, error, isLoading, mutate);
+    // console.log('useChat', data, error, isLoading, mutate);
 
     return {
         data,

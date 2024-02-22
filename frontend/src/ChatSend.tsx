@@ -148,17 +148,17 @@ export const ChatSend = ({
 
     const handleMessageSend = () => {
         if (!textArea.current) {
-            console.log("textArea.current is null");
+            // console.log("textArea.current is null");
             toast.error("Prompt cannot be empty.");
             return; // no empty messages allowed
         }
         if (numOfEndpointsWithoutModel > 0) {
-            console.log("All conversations must have a model selected before sending a message.");
+            // console.log("All conversations must have a model selected before sending a message.");
             toast.error("All conversations must have a model selected before sending a message.");
             return;
         }
 
-        console.log(`SENDING ${images.length} images`);
+        // console.log(`SENDING ${images.length} images`);
         if (images.length === 0) {
             onSend?.(textArea.current.value, undefined);
             textArea.current!.value = "";
@@ -204,12 +204,12 @@ export const ChatSend = ({
         // Cmd + k to open/close dialog
 
         if (disabled) {
-            console.log(`Chat send dialog is disabled. Skipping event listener setup.`);
+            // console.log(`Chat send dialog is disabled. Skipping event listener setup.`);
             return;
         }
 
         if (endpoints.length === 0) {
-            console.log(`No endpoints found. Skipping event listener setup. Opening chat send dialog is disabled.`)
+            // console.log(`No endpoints found. Skipping event listener setup. Opening chat send dialog is disabled.`)
             return;
         }
 
@@ -243,7 +243,7 @@ export const ChatSend = ({
                             <div className="flex flex-wrap gap-2">
                                 {chat === undefined && endpoints.map((ep) => {
                                     const mdl = endpointsSelectedModel.get(ep);
-                                    console.log(`mdl`, typeof mdl)
+                                    // console.log(`mdl`, typeof mdl)
                                     if (mdl === undefined || mdl === "") {
                                         return null;
                                     }
@@ -260,13 +260,13 @@ export const ChatSend = ({
 
                                 }
                                 {chat !== undefined && chat.conversations.map((conv, index) => {
-                                    console.log("conv.endpoint", conv.endpoint);
-                                    console.log(endpointsSelectedModel)
+                                    // console.log("conv.endpoint", conv.endpoint);
+                                    // console.log(endpointsSelectedModel)
                                     if (conv.endpoint_id === null || conv.endpoint === null) {
                                         return null;
                                     }
                                     const model = endpointsSelectedModel.get(conv.endpoint);
-                                    console.log("model", model);
+                                    // console.log("model", model);
                                     return (
                                         <div key={index} className="flex flex-row justify-center items-center gap-1">
                                             <Badge variant={'outline'}>
@@ -309,7 +309,7 @@ export const ChatSend = ({
                                     {/* <SelectModel
                                         modelName={model}
                                         onModelChange={(model) => {
-                                            console.log("model", model);
+                                            // console.log("model", model);
                                             setModel(model);
                                             // setSelectedModelForAllEndpoints(model);
                                         }}
