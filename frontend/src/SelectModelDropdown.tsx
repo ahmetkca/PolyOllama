@@ -25,7 +25,7 @@ export const SelectModel = memo((
 
     const [open, setOpen] = useState(false);
 
-    const { models, isError, isLoading } = useModels(endpoint);
+    const { models } = useModels(endpoint);
 
     return (
         <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -51,7 +51,7 @@ export const SelectModel = memo((
                     <CommandInput placeholder="Search for a model" />
                     <CommandList>
                         <CommandEmpty>
-                            {isLoading ? "Loading..." : isError ? "Error loading models" : "No models found"}
+                            No models found.
                         </CommandEmpty>
                         {/* the command item's model names should be truncated */}
                         {/* inside this component there are p tags as childs they should not exceed the scrollarea container */}
@@ -61,7 +61,7 @@ export const SelectModel = memo((
                         <CommandGroup
                             className="w-56"
                         >
-                            {!isLoading && models?.models.map((model) => (
+                            {models && models.models.length > 0 && models.models.map((model) => (
                                 <CommandItem
                                     key={model.name}
                                     value={model.name}

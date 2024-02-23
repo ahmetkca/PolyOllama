@@ -364,11 +364,11 @@ const httpServer = Bun.serve({
 
 const MAX_RETRY_ON_CLEANUP = 5;
 const cleanUpAndExit = async () => {
-    // removeAllDbEndpoints();
+    removeAllDbEndpoints();
     let retry = 0;
     while (retry < MAX_RETRY_ON_CLEANUP) {
         try {
-            // console.log(`Killing all Ollama servers... Attempt ${retry + 1}/${MAX_RETRY_ON_CLEANUP}`);
+            console.log(`Killing all Ollama servers... Attempt ${retry + 1}/${MAX_RETRY_ON_CLEANUP}`);
             const statuses = await ollamaServerManager.removeAll();
 
             if (statuses.every((status) => status.success)) {
@@ -383,14 +383,18 @@ const cleanUpAndExit = async () => {
 
     server.stop();
     httpServer.stop();
-    // console.log("Goodbye!");
+    console.log("Goodbye!");
 }
 
 async function handleExit(signal: string) {
-    // console.log(`Received ${signal}, cleaning up...`);
+    console.log(`Received ${signal}, cleaning up...`);
     await cleanUpAndExit();
-    // console.log('Cleanup completed, exiting now.');
+    console.log('Cleanup completed, exiting now.');
     process.exit();
+}
+
+function handleExitSync(signal: string) {
+    console.log(`Received ${signal}, cleaning up...`);
 }
 
 
@@ -411,7 +415,7 @@ process.on('unhandledRejection', async (reason, promise) => {
 
 process.on('beforeExit', async () => {
     removeAllDbEndpoints();
-    // console.log('Goodbye!');
+    console.log('Goodbye!');
     await cleanUpAndExit();
     process.exit();
 });

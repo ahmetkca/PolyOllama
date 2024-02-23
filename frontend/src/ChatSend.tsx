@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogPortal, DialogTitle } from "./components/ui/dialog";
 import { Textarea } from "./components/ui/textarea";
-import { useWebSocket, websocketReadyStateToString } from "./WebSocketContext";
 import { Button } from "./components/ui/button";
 import { AlertTriangle, Paperclip, X } from "lucide-react";
 import { asyncConvertFileToUint8Array, cn, } from "./lib/utils";
@@ -9,9 +8,9 @@ import { useOllamaClientsStore } from "./stores/use-ollama-clients-store";
 
 
 import { nanoid } from "nanoid";
-import { SelectModel } from "./SelectModelDropdown";
 import { toast } from "sonner";
 import { Badge } from "./components/ui/badge";
+import { useOperatingSystem } from "./hooks/use-operating-system";
 
 const DisplayImages = (
     {
@@ -72,7 +71,7 @@ const AddImage = (
     }
 
 
-    const handleSelectImageFileButtonClick = (_: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const handleSelectImageFileButtonClick = () => {
         fileInputRef.current?.click();
     }
 
@@ -131,6 +130,8 @@ export const ChatSend = ({
         id: string;
     }[]>([]);
 
+    const operatingSystem = useOperatingSystem();
+    
     const {
         endpoints,
         endpointsSelectedModel,
@@ -180,8 +181,6 @@ export const ChatSend = ({
                 })();
             });
         }
-
-
     }
 
     useEffect(() => {
@@ -191,9 +190,10 @@ export const ChatSend = ({
     }, [dialogOpen]);
 
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "k" && event.metaKey) {
+        console.log(event);
+        if (event.key === "k" && ((operatingSystem === 'macOS' && event.metaKey) || (operatingSystem === 'Windows' && event.altKey))) {
             setDialogOpen((open) => !open);
-        } else if (event.key === "Enter" && event.metaKey) {
+        } else if (event.key === "Enter" && ((operatingSystem === 'macOS' && event.metaKey) || (operatingSystem === 'Windows' && event.altKey))) {
 
             handleMessageSend();
             setDialogOpen(false);

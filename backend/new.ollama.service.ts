@@ -2,18 +2,26 @@ import { spawn, type Subprocess } from "bun";
 import { Ollama } from "ollama";
 import { createDbEndpoint, removeDbEndpoint } from "./db";
 
+
 async function isPortAvailable(port: number) {
-    return new Promise<boolean>((resolve) => {
-        spawn(["lsof", "-i", `:${port}`], {
-            onExit: (_subprocess, exitCode, _signalCode, _error) => {
-                console.debug(`lsof -i :${port} exited with code ${exitCode}`);
-                if (exitCode === 1) {
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            },
-        });
+    return new Promise((resolve, reject) => {
+        try {
+            const tester = Bun.serve({
+                hostname: "0.0.0.0",
+                port: port,
+                fetch: async (req) => {
+                    return new Response("You shouldn't see this", { status: 200 });
+                },
+            });
+            tester.stop();
+            resolve(true);
+        } catch (e: any) {
+            if (e.code === "EADDRINUSE") {
+                resolve(false);
+            } else {
+                reject(e);
+            }
+        }
     });
 }
 
@@ -85,17 +93,19 @@ function createOllamaServerManager(): OllamaManager {
         }
 
         const newEndpoint = `http://127.0.0.1:${nextPort}`;
+        console.log("Starting new ollama server on", newEndpoint);
         const proc = spawn(["ollama", "serve"], {
             env: {
                 ...process.env,
                 OLLAMA_HOST: `127.0.0.1:${nextPort}`,
             },
             onExit: (subprocess, exitCode, signalCode, error) => {
-                // console.log("Ollama server exited", newEndpoint, exitCode, signalCode, error);
+                console.log("Ollama server exited", newEndpoint, exitCode, signalCode, error);
                 removeDbEndpoint(newEndpoint);
                 ollamaServers.delete(newEndpoint);
             },
         });
+        console.log("Ollama server started");
 
         const ollamaClient = new Ollama({ host: newEndpoint });
 
