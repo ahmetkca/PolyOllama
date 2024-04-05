@@ -1,6 +1,6 @@
 # PolyOllama
 
-Run multiple same or different open source large language models such as [Llama2](https://ollama.com/library/llama2), [Mistral](https://ollama.com/library/mistral) and [Gemma](https://ollama.com/library/gemma) in parallel simultaneously powered by [Ollama](ollama.ai).
+Run multiple same or different open source large language models such as [Llama2](https://ollama.com/library/llama2), [Mistral](https://ollama.com/library/mistral) and [Gemma](https://ollama.com/library/gemma) in parallel simultaneously powered by [Ollama](https://ollama.com/). 
 
 # Demo
 
