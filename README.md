@@ -8,7 +8,8 @@ https://github.com/ahmetkca/PolyOllama/assets/74574469/f0084d3c-6223-4f7e-9442-2
 
 # Instructions to run it locally
 
-> You need [Ollama](ollama.ai) installed on your computer. 
+> You need [Ollama](ollama.ai) installed on your computer.
+> It has only been tested on macOS. However, it can be run on Windows using WSL2, provided Ollama is installed on Windows. The frontend and backend will run in WSL2, but the Windows version of Ollama will be used for optimal performance.
 
 ```bash
 cd backend
