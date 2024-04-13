@@ -11,6 +11,9 @@ https://github.com/ahmetkca/PolyOllama/assets/74574469/f0084d3c-6223-4f7e-9442-2
 > You need [Ollama](ollama.ai) installed on your computer.
 > It has only been tested on macOS. It should run on Windows as well. (Please feel free to test it on Windows and create a issue if there is any)
 
+cmd + k (to open the chat prompt)
+alt + k (on Windows)
+
 ```bash
 cd backend
 bun install
@@ -22,5 +25,7 @@ cd frontend
 bun install
 bun run dev
 ```
+
+
 
 > :warning: **Still work in progress**
