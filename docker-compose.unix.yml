@@ -13,7 +13,7 @@ services:
   backend:
     image: ahmetkca/polyollama_backend:latest
     volumes:
-      - /home/${USER}/.ollama/models:/root/.ollama/models
+      - /usr/share/ollama/.ollama/models:/root/.ollama/models
     ports:
       - "3000:3000"
       - "3333:3333"
