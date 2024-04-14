@@ -1,0 +1,25 @@
+version: "3.7"
+
+services:
+  frontend:
+    image: ahmetkca/polyollama_frontend:latest
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - polyollama
+
+  backend:
+    image: ahmetkca/polyollama_backend:latest
+    volumes:
+      - /home/${USER}/.ollama/models:/root/.ollama/models
+    ports:
+      - "3000:3000"
+      - "3333:3333"
+    networks:
+      - polyollama
+
+networks:
+  polyollama:
+    driver: bridge
