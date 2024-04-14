@@ -131,7 +131,7 @@ export const ChatSend = ({
     }[]>([]);
 
     const operatingSystem = useOperatingSystem();
-    
+
     const {
         endpoints,
         endpointsSelectedModel,
@@ -191,10 +191,17 @@ export const ChatSend = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
         console.log(event);
-        if (event.key === "k" && ((operatingSystem === 'macOS' && event.metaKey) || (operatingSystem === 'Windows' && event.altKey))) {
+        if (event.key === "k" &&
+            ((operatingSystem === 'macOS' && event.metaKey) ||
+                (operatingSystem === 'Windows' && event.altKey) ||
+                (operatingSystem === 'Linux' && event.altKey))
+        ) {
             setDialogOpen((open) => !open);
-        } else if (event.key === "Enter" && ((operatingSystem === 'macOS' && event.metaKey) || (operatingSystem === 'Windows' && event.altKey))) {
-
+        } else if (event.key === "Enter" &&
+            ((operatingSystem === 'macOS' && event.metaKey) ||
+                (operatingSystem === 'Windows' && event.altKey) ||
+                (operatingSystem === 'Linux' && event.altKey))
+        ) {
             handleMessageSend();
             setDialogOpen(false);
         }
